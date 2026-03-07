@@ -11,6 +11,8 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+
 @Component
 @RequiredArgsConstructor
 public class AdminInitializer implements ApplicationRunner {
@@ -30,7 +32,7 @@ public class AdminInitializer implements ApplicationRunner {
             User admin = new User();
             admin.setName("Admin");
             admin.setEmail(adminEmail);
-            admin.setAge(100);
+            admin.setDateOfBirth(LocalDate.of(2002, 4, 3));
             admin.setPassword_confirmation(passwordEncoder.encode(adminPassword));
             admin.setPassword(passwordEncoder.encode(adminPassword));
             admin.setGender("F");

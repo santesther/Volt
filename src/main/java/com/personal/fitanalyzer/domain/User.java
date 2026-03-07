@@ -15,8 +15,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -39,7 +42,7 @@ public class User implements UserDetails {
     private Float weight;
 
     @Column(nullable = false)
-    private Integer age;
+    private LocalDate dateOfBirth;
 
     @Column(nullable = false)
     private String gender;
@@ -63,13 +66,13 @@ public class User implements UserDetails {
     public User(){
     }
 
-    public User(Long id, String name, String email, Float height, Float weight, Integer age, String gender, String password, String password_confirmation, Goal goal, Role role, List<Workout> workouts) {
+    public User(Long id, String name, String email, Float height, Float weight, LocalDate dateOfBirth, String gender, String password, String password_confirmation, Goal goal, Role role, List<Workout> workouts) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.height = height;
         this.weight = weight;
-        this.age = age;
+        this.dateOfBirth = dateOfBirth;
         this.gender = gender;
         this.password = password;
         this.password_confirmation = password_confirmation;
@@ -118,12 +121,12 @@ public class User implements UserDetails {
         this.weight = weight;
     }
 
-    public Integer getAge() {
-        return age;
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
     }
 
-    public void setAge(Integer age) {
-        this.age = age;
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
     }
 
     public String getGender() {
@@ -203,5 +206,9 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public Integer getAge(){
+        return Period.between(dateOfBirth, LocalDate.now()).getYears();
     }
 }

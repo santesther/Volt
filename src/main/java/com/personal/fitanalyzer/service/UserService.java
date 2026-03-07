@@ -42,6 +42,7 @@ public class UserService {
                 savedUser.getEmail(),
                 savedUser.getHeight(),
                 savedUser.getWeight(),
+                savedUser.getDateOfBirth(),
                 savedUser.getAge(),
                 savedUser.getGender(),
                 savedUser.getGoal()
@@ -50,7 +51,7 @@ public class UserService {
 
     public List<UserResponseDTO> findAllUsers() {
         return userRepository.findAll().stream()
-                .map(user -> new UserResponseDTO(user.getId(), user.getName(), user.getEmail(), user.getHeight(), user.getWeight(), user.getAge(),
+                .map(user -> new UserResponseDTO(user.getId(), user.getName(), user.getEmail(), user.getHeight(), user.getWeight(), user.getDateOfBirth(), user.getAge(),
                         user.getGender(), user.getGoal()))
                 .collect(Collectors.toList());
     }
@@ -67,7 +68,7 @@ public class UserService {
         user.setEmail(userRequest.email());
         user.setHeight(userRequest.height());
         user.setWeight(userRequest.weight());
-        user.setAge(userRequest.age());
+        user.setDateOfBirth(userRequest.dateOfBirth());
         user.setGender(userRequest.gender());
         user.setPassword(userRequest.password());
         user.setPassword_confirmation(userRequest.password_confirmation());
@@ -81,6 +82,7 @@ public class UserService {
                 savedUser.getEmail(),
                 savedUser.getHeight(),
                 savedUser.getWeight(),
+                savedUser.getDateOfBirth(),
                 savedUser.getAge(),
                 savedUser.getGender(),
                 savedUser.getGoal()
@@ -101,7 +103,7 @@ public class UserService {
         user.setEmail(dto.email());
         user.setHeight(dto.height());
         user.setWeight(dto.weight());
-        user.setAge(dto.age());
+        user.setDateOfBirth(dto.dateOfBirth());
         user.setGender(dto.gender());
         user.setPassword(dto.password());
         user.setPassword_confirmation(dto.password_confirmation());

@@ -33,7 +33,7 @@ public class UserController {
         User user = userService.findUserById(id);
         return ResponseEntity.ok(new UserResponseDTO(
                 user.getId(), user.getName(), user.getEmail(),
-                user.getHeight(), user.getWeight(), user.getAge(), user.getGender(), user.getGoal()
+                user.getHeight(), user.getWeight(), user.getDateOfBirth(), user.getAge(), user.getGender(), user.getGoal()
         ));
     }
 

@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDate;
+
 public record UserRequestDTO(
         @NotBlank(message = "O nome é obrigatório")
         String name,
@@ -22,7 +24,7 @@ public record UserRequestDTO(
         @NotNull(message = "O peso é obrigatório")
         Float weight,
         @NotNull(message = "A idade é obrigatória")
-        Integer age,
+        LocalDate dateOfBirth,
         @NotBlank(message = "O genero é obrigatório")
         String gender,
         @NotNull(message="O objetivo é obrigatório")
