@@ -30,9 +30,8 @@ public class StrengthWorkoutController {
 
     @GetMapping("/{id}")
     public ResponseEntity<StrengthWorkoutResponseDTO> findById(@PathVariable Long id) {
-        StrengthWorkout strengthWorkout = strengthWorkoutService.findStrengthWorkoutById(id);
-        return ResponseEntity.ok(new StrengthWorkoutResponseDTO(strengthWorkout.getId(), strengthWorkout.getEffort(), strengthWorkout.getDate(), strengthWorkout.getSets(),
-                strengthWorkout.getDurationMinutes(), strengthWorkout.getEquipmentType(), strengthWorkout.getMuscles()));
+        StrengthWorkout workout = strengthWorkoutService.findStrengthWorkoutById(id);
+        return ResponseEntity.ok(strengthWorkoutService.toResponse(workout));
     }
 
     @PostMapping

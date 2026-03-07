@@ -10,8 +10,8 @@ public record StrengthWorkoutResponseDTO(
         Long id,
         Integer effort,
         LocalDateTime date,
-        Integer sets,
         Integer durationMinutes,
         Equipment equipment,
-        List<MuscleGroups> musclesGroupsIds)
-{}
+        List<WorkoutSetResponseDTO> sets,
+        List<MuscleGroups> muscles
+) {}
