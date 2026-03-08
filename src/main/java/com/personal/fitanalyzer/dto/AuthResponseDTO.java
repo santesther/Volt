@@ -1,4 +1,4 @@
 package com.personal.fitanalyzer.dto;
 
 
-public record AuthResponseDTO(String token) {}
+public record AuthResponseDTO(String token, Long userId) {}

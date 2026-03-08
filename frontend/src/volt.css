@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: #050505;
+  color: #F2F2F2;
+  font-family: 'DM Sans', sans-serif;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── TELA BASE (mobile) ── */
+.volt-screen {
+  padding: 44px 22px 0;
+}
+
+/* ── TABLET (768px+) ── */
+@media (min-width: 768px) {
+  .volt-screen {
+    padding: 48px 40px 0;
+  }
+}
+
+/* ── NOTEBOOK (1024px+) ── */
+@media (min-width: 1024px) {
+  .volt-screen {
+    padding: 56px 64px 0;
+  }
+  .volt-bottom-nav {
+    padding-left: 64px !important;
+    padding-right: 64px !important;
+  }
+}
+
+/* ── DESKTOP FULL HD (1440px+) ── */
+@media (min-width: 1440px) {
+  .volt-screen {
+    padding: 64px 120px 0;
+  }
+  .volt-bottom-nav {
+    padding-left: 120px !important;
+    padding-right: 120px !important;
+  }
+}
+
+/* ── ULTRAWIDE (1920px+) ── */
+@media (min-width: 1920px) {
+  .volt-screen {
+    padding: 72px 200px 0;
+  }
+  .volt-bottom-nav {
+    padding-left: 200px !important;
+    padding-right: 200px !important;
+  }
+}
