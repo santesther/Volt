@@ -9,6 +9,7 @@ export default function Dashboard({ onRegister, userId }) {
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const [suggestion, setSuggestion] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     api.post(`/suggestions/${userId}`, { painfulMuscleIds: [] })
@@ -17,14 +18,20 @@ export default function Dashboard({ onRegister, userId }) {
       .finally(() => setLoading(false));
   }, [userId]);
 
+   useEffect(() => {
+     api.get(`/users/${userId}`)
+       .then(res => setUserName(res.data.name?.split(" ")[0] || ""))
+       .catch(err => console.error(err));
+   }, [userId]);
+
   return (
     <div className="volt-screen">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:24 }}>
         <div>
           <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.muted, marginBottom:2 }}>{greeting} ⚡</div>
-          <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:26, letterSpacing:"-0.02em" }}>Esther</div>
+          <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:26, letterSpacing:"-0.02em" }}>{userName}</div>
         </div>
-        <div style={{ width:42, height:42, background:C.yellow, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:16, color:"#050505" }}>E</div>
+        <div style={{ width:42, height:42, background:C.yellow, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:16, color:"#050505" }}>{userName?.charAt(0)?.toUpperCase() || "?"}</div>
       </div>
 
       <div style={{ background:C.yellow, borderRadius:20, padding:"20px 22px", marginBottom:18 }}>

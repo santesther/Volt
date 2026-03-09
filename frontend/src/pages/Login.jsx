@@ -6,7 +6,7 @@ const C = {
   graphite: "#191919", text: "#F2F2F2", muted: "#666",
 };
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, onRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -70,6 +70,10 @@ export default function Login({ onLogin }) {
       }}>
         {loading ? "ENTRANDO..." : "ENTRAR"}
       </button>
+      <div style={{ textAlign:"center", marginTop:20 }}>
+        <span style={{ fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.muted }}>Não tem conta? </span>
+        <button onClick={onRegister} style={{ background:"none", border:"none", cursor:"pointer", fontFamily:"'Space Mono', monospace", fontSize:10, color:C.yellow, letterSpacing:"0.15em" }}>CRIAR CONTA</button>
+      </div>
     </div>
   );
 }
