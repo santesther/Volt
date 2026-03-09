@@ -8,8 +8,8 @@ export const EQUIPMENT_OPTIONS = ["FREE_WEIGHT", "MACHINE", "MIXED"];
 export const EQUIPMENT_LABELS  = { FREE_WEIGHT: "Peso Livre", MACHINE: "Máquina", MIXED: "Misto" };
 
 export const ZONE_OPTIONS    = ["Z1", "Z2", "Z3", "Z4", "Z5"];
-export const WEATHER_OPTIONS = ["SUNNY", "CLOUDY", "RAINY", "WINDY", "HOT", "COLD"];
-export const WEATHER_LABELS  = { SUNNY: "☀️ Sol", CLOUDY: "☁️ Nublado", RAINY: "🌧️ Chuva", WINDY: "💨 Vento", HOT: "🌡️ Calor", COLD: "❄️ Frio", PLEASANT: "Agradável"};
+export const WEATHER_OPTIONS = ["SUNNY", "CLOUDY", "RAINY", "WINDY", "HOT", "COLD", "PLEASANT"];
+export const WEATHER_LABELS  = { SUNNY: "☀️ Sol", CLOUDY: "☁️ Nublado", RAINY: "🌧️ Chuva", WINDY: "💨 Vento", HOT: "🌡️ Calor", COLD: "❄️ Frio", PLEASANT: "🌤️ Agradável"};
 export const RUNTYPE_OPTIONS = ["EASY", "TEMPO", "LONG_RUN", "INTERVAL", "RECOVERY"];
 export const RUNTYPE_LABELS  = { EASY: "Fácil", TEMPO: "Tempo", LONG_RUN: "Longão", INTERVAL: "Intervalado", RECOVERY: "Recuperação" };
 

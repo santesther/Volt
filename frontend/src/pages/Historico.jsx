@@ -137,7 +137,7 @@ export default function Historico({ userId, highlightId }) {
             </div>
             <div style={{ flex:1, background:"rgba(255,210,0,0.05)", border:"1px solid rgba(255,210,0,0.1)", borderRadius:12, padding:"10px 14px" }}>
               <span style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color:C.muted }}>CLIMA · </span>
-              <span style={{ fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.yellow }}>{selected.climate?.replace("_"," ")}</span>
+              <span style={{ fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.yellow }}>{selected.weather?.replace("_"," ")}</span>
             </div>
           </div>
           {(selected.uphill > 0 || selected.downhill > 0) && (

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import api from "../api/api";
-import { C, ZONE_OPTIONS, WEATHER_OPTIONS, WEATHER_LABELS } from "../utils/constants";
+import { C, ZONE_OPTIONS, WEATHER_OPTIONS, WEATHER_LABELS, RUNTYPE_OPTIONS, RUNTYPE_LABELS } from "../utils/constants";
 import { SectionLabel, NumericStepper, EffortSlider } from "../utils/components";
 
 export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
@@ -12,6 +12,7 @@ export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
     zone: suggestion.suggestedZone || "Z2",
     uphill: 0, downhill: 0,
     weather: "SUNNY",
+    runType: suggestion.runType || "EASY",
   });
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -27,7 +28,7 @@ export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
       const res = await api.post("/run-workouts", {
         userId, effort: form.effort, date: form.date + ":00",
         km: form.km, duration: form.duration, zone: form.zone,
-        uphill: form.uphill, downhill: form.downhill, weather: form.weather,
+        uphill: form.uphill, downhill: form.downhill, weather: form.weather, runType: form.runType,
       });
       setSaved(true);
       setTimeout(() => { setSaved(false); onSave(res.data.id); }, 1800);
@@ -91,6 +92,15 @@ export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
         <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
           {WEATHER_OPTIONS.map(w => (
             <button key={w} onClick={() => set("weather")(w)} style={{ padding:"8px 12px", borderRadius:10, cursor:"pointer", background: form.weather === w ? "rgba(255,210,0,0.1)" : C.graphite, border:`1px solid ${form.weather === w ? C.yellow : "rgba(255,255,255,0.08)"}`, fontFamily:"'DM Sans', sans-serif", fontSize:12, color: form.weather === w ? C.yellow : C.muted }}>{WEATHER_LABELS[w]}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginBottom:16 }}>
+        <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>Tipo de Corrida</div>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+          {RUNTYPE_OPTIONS.map(r => (
+            <button key={r} onClick={() => set("runType")(r)} style={{ padding:"8px 12px", borderRadius:10, cursor:"pointer", background: form.runType === r ? "rgba(255,210,0,0.1)" : C.graphite, border:`1px solid ${form.runType === r ? C.yellow : "rgba(255,255,255,0.08)"}`, fontFamily:"'DM Sans', sans-serif", fontSize:12, color: form.runType === r ? C.yellow : C.muted }}>{RUNTYPE_LABELS[r]}</button>
           ))}
         </div>
       </div>
