@@ -7,12 +7,14 @@ import Perfil           from "./Perfil";
 import Configuracoes    from "./Configuracoes";
 import RegisterStrength from "./RegisterStrength";
 import RegisterRun      from "./RegisterRun";
+import TrainingPlanSetup from "./TrainingPlanSetup";
 
 export default function VoltApp({ userId, onLogout }) {
   const [tab, setTab] = useState("dashboard");
   const [showSettings, setShowSettings] = useState(false);
   const [registering, setRegistering] = useState(null);
   const [lastSavedId, setLastSavedId] = useState(null);
+  const [editingPlan, setEditingPlan] = useState(false);
 
   const handleSave = (savedWorkoutId) => {
     setRegistering(null);
@@ -26,11 +28,12 @@ export default function VoltApp({ userId, onLogout }) {
       if (registering.type === "STRENGTH") return <RegisterStrength suggestion={registering} userId={userId} onBack={back} onSave={handleSave} />;
       if (registering.type === "RUN")      return <RegisterRun      suggestion={registering} userId={userId} onBack={back} onSave={handleSave} />;
     }
+    if (editingPlan) return <TrainingPlanSetup userId={userId} onDone={() => setEditingPlan(false)} />;
     if (tab === "dashboard") return <Dashboard onRegister={s => setRegistering(s)} userId={userId} />;
     if (tab === "historico") return <Historico userId={userId} highlightId={lastSavedId} />;
     if (tab === "charge")    return <ChargeMap key={lastSavedId} userId={userId} />;
     if (tab === "perfil" && showSettings) return <Configuracoes userId={userId} onBack={() => setShowSettings(false)} onLogout={onLogout} />;
-    if (tab === "perfil")  return <Perfil userId={userId} onOpenSettings={() => setShowSettings(true)} onLogout={onLogout} />;
+    if (tab === "perfil")    return <Perfil userId={userId} onOpenSettings={() => setShowSettings(true)} onLogout={onLogout} onEditPlan={() => setEditingPlan(true)} />;
   };
 
   return (

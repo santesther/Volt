@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(registry -> {
-                    registry.requestMatchers("/auth/login", "/auth/**", "/strength-workouts/**", "/run-workouts/**").permitAll();
+                    registry.requestMatchers("/auth/login", "/auth/**", "/strength-workouts/**", "/run-workouts/**", "/training-plans/user/**").permitAll();
                     registry.requestMatchers(HttpMethod.POST, "/users").permitAll();
                     registry.anyRequest().authenticated();
                 })

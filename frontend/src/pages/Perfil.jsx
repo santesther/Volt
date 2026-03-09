@@ -43,7 +43,7 @@ function Section({ title, children }) {
   );
 }
 
-export default function Perfil({ userId, onOpenSettings, onLogout }) {
+export default function Perfil({ userId, onOpenSettings, onLogout, onEditPlan }) {
   const [photo, setPhoto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
@@ -206,6 +206,10 @@ export default function Perfil({ userId, onOpenSettings, onLogout }) {
         </div>
         <SaveButton onClick={saveGoal} saving={savingGoal} saved={savedGoal} error={errorGoal} />
       </Section>
+
+      <button onClick={onEditPlan} style={{ width:"100%", background:C.graphite, border:"1px solid rgba(255,255,255,0.08)", borderRadius:14, padding:"14px", cursor:"pointer", marginBottom:10, fontFamily:"'Space Mono', monospace", fontSize:10, fontWeight:700, letterSpacing:"0.2em", color:C.muted }}>
+        ⚡ EDITAR PLANO DE TREINO
+      </button>
 
       <button onClick={onLogout} style={{ width:"100%", background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:14, padding:"14px", cursor:"pointer", marginBottom:14, fontFamily:"'Space Mono', monospace", fontSize:10, fontWeight:700, letterSpacing:"0.2em", color:C.muted, transition:"all 0.2s" }}
         onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,59,48,0.4)"; e.currentTarget.style.color = C.red; }}

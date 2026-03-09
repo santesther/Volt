@@ -91,10 +91,15 @@ public class SuggestionEngineService {
                 .findFirst();
 
         if (strengthEntry.isPresent()) {
-            return buildStrengthSuggestion(
+            SuggestionResponseDTO suggestion = buildStrengthSuggestion(
                     strengthEntry.get().getMuscleGroups(),
                     painfulMuscleIds, intensity, fatigue, user.getId()
             );
+
+            if (suggestion == null) {
+                return restSuggestion(fatigue, plan, today);
+            }
+            return suggestion;
         }
 
         return buildRunSuggestion(intensity, fatigue);
@@ -205,8 +210,12 @@ public class SuggestionEngineService {
             message = "Atenção: " + fatiguedNames + " ainda estão em recuperação. Treine com cautela!";
         }
 
+        if (readyMuscles.isEmpty()) {
+            return null;
+        }
+
         return new SuggestionResponseDTO(
-                WorkoutType.STRENGTH, message, readyMuscles.isEmpty() ? plannedMuscles : readyMuscles,
+                WorkoutType.STRENGTH, message, readyMuscles,
                 suggestedSets, null, null, null, intensity, fatigue
         );
     }

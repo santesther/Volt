@@ -105,7 +105,7 @@ export default function Register({ onLogin, onBack }) {
 
       {step === 0 && (
         <div style={{ flex:1 }}>
-          <Field label="Nome completo" value={form.name} onChange={set("name")} placeholder="Esther Silva" />
+          <Field label="Nome completo" value={form.name} onChange={set("name")} placeholder="Nome Completo" />
           <Field label="Email" value={form.email} onChange={set("email")} type="email" placeholder="seu@email.com" />
           <Field label="Senha" value={form.password} onChange={set("password")} type="password" placeholder="••••••••" />
           <Field label="Confirmar senha" value={form.password_confirmation} onChange={set("password_confirmation")} type="password" placeholder="••••••••" />
