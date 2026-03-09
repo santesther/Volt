@@ -153,7 +153,15 @@ export default function Configuracoes({ userId, onBack, onLogout }) {
         <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:12, color:C.muted, marginBottom:14, lineHeight:1.6 }}>
           Ações irreversíveis. Proceda com cautela.
         </div>
-        <button style={{ width:"100%", background:"rgba(255,59,48,0.08)", border:"1px solid rgba(255,59,48,0.25)", borderRadius:14, padding:"13px", cursor:"pointer", fontFamily:"'Space Mono', monospace", fontSize:10, fontWeight:700, letterSpacing:"0.15em", color:C.red, transition:"background 0.2s" }}
+        <button onClick={async () => {
+          if (!window.confirm("Tem certeza? Essa ação é irreversível.")) return;
+          try {
+            await api.delete(`/users/${userId}`);
+            onLogout();
+          } catch (err) {
+            console.error("Erro ao excluir conta:", err);
+          }
+        }} style={{ width:"100%", background:"rgba(255,59,48,0.08)", border:"1px solid rgba(255,59,48,0.25)", borderRadius:14, padding:"13px", cursor:"pointer", fontFamily:"'Space Mono', monospace", fontSize:10, fontWeight:700, letterSpacing:"0.15em", color:C.red, transition:"background 0.2s" }}
           onMouseEnter={e => e.currentTarget.style.background = "rgba(255,59,48,0.15)"}
           onMouseLeave={e => e.currentTarget.style.background = "rgba(255,59,48,0.08)"}
         >

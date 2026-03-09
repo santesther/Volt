@@ -11,18 +11,18 @@ export default function Dashboard({ onRegister, userId }) {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
 
-  useEffect(() => {
-    api.post(`/suggestions/${userId}`, { painfulMuscleIds: [] })
-      .then(res => setSuggestion(res.data))
-      .catch(err => console.error(err))
-      .finally(() => setLoading(false));
-  }, [userId]);
-
    useEffect(() => {
      api.get(`/users/${userId}`)
        .then(res => setUserName(res.data.name?.split(" ")[0] || ""))
        .catch(err => console.error(err));
    }, [userId]);
+
+useEffect(() => {
+    api.post(`/suggestions/${userId}`, { painfulMuscleIds: [] })
+      .then(res => setSuggestion(res.data))
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false));
+  }, [userId]);
 
   return (
     <div className="volt-screen">

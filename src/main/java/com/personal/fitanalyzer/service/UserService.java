@@ -6,6 +6,7 @@ import com.personal.fitanalyzer.dto.UserRequestDTO;
 import com.personal.fitanalyzer.dto.UserResponseDTO;
 import com.personal.fitanalyzer.exception.BusinessException;
 import com.personal.fitanalyzer.exception.ResourceNotFoundException;
+import com.personal.fitanalyzer.repository.TrainingPlanRepository;
 import com.personal.fitanalyzer.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,9 +22,12 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    private final TrainingPlanRepository trainingPlanRepository;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, TrainingPlanRepository trainingPlanRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.trainingPlanRepository = trainingPlanRepository;
     }
 
     @Transactional
@@ -90,6 +94,8 @@ public class UserService {
         if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("Usuário não encontrado");
         }
+        trainingPlanRepository.findByUserId(id)
+                .ifPresent(trainingPlanRepository::delete);
         userRepository.deleteById(id);
     }
 

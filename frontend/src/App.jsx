@@ -31,6 +31,7 @@ export default function App() {
     setScreen("login");
   };
 
+  if (screen === "register") return <Register onLogin={handleLogin} onBack={() => setScreen("login")} />;
   if (userId && needsPlan) return <TrainingPlanSetup userId={userId} onDone={() => setNeedsPlan(false)} onSkip={() => setNeedsPlan(false)} />;
   if (userId) return <VoltApp userId={userId} onLogout={handleLogout} />;
   return <Login onLogin={handleLogin} onRegister={() => setScreen("register")} />;
