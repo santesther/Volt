@@ -13,11 +13,7 @@ public record UserRequestDTO(
         @NotBlank(message = "O e-mail é obrigatório")
         @Email(message = "E-mail inválido")
         String email,
-        @NotBlank(message = "A senha é obrigatória")
-        @Size(min=8, message= "A senha deve ter pelo menos 8 caracteres")
         String password,
-        @NotBlank(message = "A senha é obrigatória")
-        @Size(min=8, message= "A confirmação da sua senha deve ser igual a senha")
         String password_confirmation,
         @NotNull(message = "A altura é obrigatória")
         Float height,

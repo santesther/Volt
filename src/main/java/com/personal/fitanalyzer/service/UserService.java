@@ -32,11 +32,11 @@ public class UserService {
             throw new BusinessException("Email já cadastrado");
         }
 
-        User user = toEntity(userRequest);          // converte DTO → entidade
+        User user = toEntity(userRequest);
         user.setPassword(passwordEncoder.encode(userRequest.password()));
         User savedUser = userRepository.save(user);
 
-        return new UserResponseDTO(                 // converte entidade → ResponseDTO e retorna
+        return new UserResponseDTO(
                 savedUser.getId(),
                 savedUser.getName(),
                 savedUser.getEmail(),
@@ -70,22 +70,18 @@ public class UserService {
         user.setWeight(userRequest.weight());
         user.setDateOfBirth(userRequest.dateOfBirth());
         user.setGender(userRequest.gender());
-        user.setPassword(userRequest.password());
-        user.setPassword_confirmation(userRequest.password_confirmation());
         user.setGoal(userRequest.goal());
 
-        User savedUser = userRepository.save(user); // salva as alterações
+        if (userRequest.password() != null && !userRequest.password().isBlank()) {
+            user.setPassword(passwordEncoder.encode(userRequest.password()));
+            user.setPassword_confirmation(userRequest.password_confirmation());
+        }
 
-        return new UserResponseDTO(                 // retorna o ResponseDTO
-                savedUser.getId(),
-                savedUser.getName(),
-                savedUser.getEmail(),
-                savedUser.getHeight(),
-                savedUser.getWeight(),
-                savedUser.getDateOfBirth(),
-                savedUser.getAge(),
-                savedUser.getGender(),
-                savedUser.getGoal()
+        User savedUser = userRepository.save(user);
+        return new UserResponseDTO(
+                savedUser.getId(), savedUser.getName(), savedUser.getEmail(),
+                savedUser.getHeight(), savedUser.getWeight(), savedUser.getDateOfBirth(),
+                savedUser.getAge(), savedUser.getGender(), savedUser.getGoal()
         );
     }
 

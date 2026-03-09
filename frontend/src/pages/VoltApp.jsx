@@ -28,8 +28,8 @@ export default function VoltApp({ userId, onLogout }) {
     }
     if (tab === "dashboard") return <Dashboard onRegister={s => setRegistering(s)} userId={userId} />;
     if (tab === "historico") return <Historico userId={userId} highlightId={lastSavedId} />;
-    if (tab === "charge")    return <ChargeMap />;
-    if (tab === "perfil" && showSettings) return <Configuracoes onBack={() => setShowSettings(false)} />;
+    if (tab === "charge") return <ChargeMap key={lastSavedId} userId={userId} />;
+    if (tab === "perfil") return <Perfil userId={userId} onOpenSettings={() => setShowSettings(true)} onLogout={onLogout} />;
     if (tab === "perfil")    return <Perfil onOpenSettings={() => setShowSettings(true)} onLogout={onLogout} />;
   };
 

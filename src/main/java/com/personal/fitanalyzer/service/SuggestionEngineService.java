@@ -74,7 +74,7 @@ public class SuggestionEngineService {
                 .filter(d -> d.getDayOfWeek() == today)
                 .findFirst();
 
-        TrainingDay trainingDay = todayOpt.orElseGet(() -> nextPlannedDay(plan, today));
+        TrainingDay trainingDay = todayOpt.orElseGet(() -> nextReadyDay(plan, today, fatigue));
 
         if (trainingDay == null) {
             return restSuggestion(fatigue, plan, today);
@@ -113,13 +113,14 @@ public class SuggestionEngineService {
     }
 
     private SuggestionResponseDTO restSuggestion(Map<String, Float> fatigue, TrainingPlan plan, DayOfWeek today) {
+        TrainingDay nextDay = nextReadyDay(plan, today, fatigue);
 
-        TrainingDay nextDay = nextPlannedDay(plan, today);
-
-        String message = "Hoje é dia de descanso! Aproveite para recuperar.";
+        String message;
         List<MuscleGroups> nextMuscles = null;
 
-        if (nextDay != null) {
+        if (nextDay == null) {
+            message = "Hoje é dia de descanso! Todos os músculos planejados ainda estão em recuperação.";
+        } else {
             Optional<TrainingDayEntry> nextStrength = nextDay.getTrainingDayEntries().stream()
                     .filter(e -> e.getWorkoutType() == WorkoutType.STRENGTH)
                     .findFirst();
@@ -139,6 +140,28 @@ public class SuggestionEngineService {
                 WorkoutType.REST, message, nextMuscles,
                 null, null, null, null, "LOW", fatigue
         );
+    }
+
+    private TrainingDay nextReadyDay(TrainingPlan plan, DayOfWeek today, Map<String, Float> fatigue) {
+        return plan.getTrainingDays().stream()
+                .filter(d -> d.getDayOfWeek() != today)
+                .filter(d -> d.getTrainingDayEntries().stream()
+                        .anyMatch(e -> e.getWorkoutType() != WorkoutType.REST))
+                .filter(d -> {
+                    boolean isRunDay = d.getTrainingDayEntries().stream()
+                            .allMatch(e -> e.getWorkoutType() == WorkoutType.RUN);
+                    if (isRunDay) return true;
+
+                    return d.getTrainingDayEntries().stream()
+                            .filter(e -> e.getWorkoutType() == WorkoutType.STRENGTH)
+                            .flatMap(e -> e.getMuscleGroups().stream())
+                            .anyMatch(m -> fatigue.getOrDefault(m.getName(), 0f) < 30f);
+                })
+                .min(Comparator.comparingInt(d -> {
+                    int diff = d.getDayOfWeek().getValue() - today.getValue();
+                    return diff <= 0 ? diff + 7 : diff;
+                }))
+                .orElse(null);
     }
 
     private SuggestionResponseDTO buildStrengthSuggestion(
