@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../api/api";
 import { C } from "../utils/constants";
 import { SectionLabel } from "../utils/components";
 
@@ -15,10 +16,14 @@ function Field({ label, value, onChange, type="text", placeholder="" }) {
   );
 }
 
-function SaveButton({ onClick, saved }) {
+function SaveButton({ onClick, saving, saved, error }) {
+  const bg     = error ? "rgba(255,59,48,0.1)" : saved ? "rgba(255,210,0,0.15)" : saving ? "rgba(255,210,0,0.4)" : C.yellow;
+  const border = error ? `1px solid ${C.red}` : saved ? `1px solid ${C.yellow}` : "none";
+  const color  = error ? C.red : saved ? C.yellow : "#050505";
+  const label  = error ? "ERRO AO SALVAR" : saved ? "✓ SALVO" : saving ? "SALVANDO..." : "SALVAR ALTERAÇÕES";
   return (
-    <button onClick={onClick} style={{ width:"100%", background: saved ? "rgba(255,210,0,0.15)" : C.yellow, border: saved ? `1px solid ${C.yellow}` : "none", borderRadius:14, padding:"14px", cursor:"pointer", fontFamily:"'Space Mono', monospace", fontSize:11, fontWeight:700, letterSpacing:"0.2em", color: saved ? C.yellow : "#050505", transition:"all 0.3s" }}>
-      {saved ? "✓ SALVO" : "SALVAR ALTERAÇÕES"}
+    <button onClick={onClick} disabled={saving} style={{ width:"100%", background:bg, border, borderRadius:14, padding:"14px", cursor: saving ? "not-allowed" : "pointer", fontFamily:"'Space Mono', monospace", fontSize:11, fontWeight:700, letterSpacing:"0.2em", color, transition:"all 0.3s" }}>
+      {label}
     </button>
   );
 }
@@ -32,23 +37,83 @@ function Section({ title, children }) {
   );
 }
 
-export default function Configuracoes({ onBack }) {
-  const [email, setEmail] = useState("esther@email.com");
+export default function Configuracoes({ userId, onBack, onLogout }) {
+  const [userData, setUserData] = useState(null);
+  const [email, setEmail] = useState("");
+  const [savingEmail, setSavingEmail] = useState(false);
   const [savedEmail, setSavedEmail] = useState(false);
+  const [errorEmail, setErrorEmail] = useState("");
+
   const [passwords, setPasswords] = useState({ current:"", next:"", confirm:"" });
+  const [savingPass, setSavingPass] = useState(false);
   const [savedPass, setSavedPass] = useState(false);
-  const [passError, setPassError] = useState("");
+  const [errorPass, setErrorPass] = useState("");
 
-  const saveEmail = () => { setSavedEmail(true); setTimeout(() => setSavedEmail(false), 2500); };
+  useEffect(() => {
+    api.get(`/users/${userId}`)
+      .then(res => {
+        setUserData(res.data);
+        setEmail(res.data.email || "");
+      })
+      .catch(err => console.error("Erro ao carregar usuário:", err));
+  }, [userId]);
 
-  const savePassword = () => {
-    setPassError("");
-    if (!passwords.current) return setPassError("Informe a senha atual.");
-    if (passwords.next.length < 8) return setPassError("Nova senha deve ter pelo menos 8 caracteres.");
-    if (passwords.next !== passwords.confirm) return setPassError("As senhas não coincidem.");
-    setSavedPass(true);
-    setPasswords({ current:"", next:"", confirm:"" });
-    setTimeout(() => setSavedPass(false), 2500);
+  const saveEmail = async () => {
+    setErrorEmail("");
+    if (!email || !email.includes("@")) { setErrorEmail("Email inválido."); return; }
+    if (!userData) return;
+    setSavingEmail(true);
+    try {
+      await api.put(`/users/${userId}`, {
+        name: userData.name,
+        email: email,
+        height: userData.height,
+        weight: userData.weight,
+        dateOfBirth: userData.dateOfBirth,
+        gender: userData.gender,
+        goal: userData.goal,
+        password: "",
+        password_confirmation: "",
+      });
+      setUserData(prev => ({ ...prev, email }));
+      setSavedEmail(true);
+      setTimeout(() => setSavedEmail(false), 2500);
+    } catch (err) {
+      console.error("Erro ao salvar email:", err);
+      setErrorEmail("Erro ao salvar. Tente novamente.");
+    } finally {
+      setSavingEmail(false);
+    }
+  };
+
+  const savePassword = async () => {
+    setErrorPass("");
+    if (!passwords.current) { setErrorPass("Informe a senha atual."); return; }
+    if (passwords.next.length < 8) { setErrorPass("Nova senha deve ter pelo menos 8 caracteres."); return; }
+    if (passwords.next !== passwords.confirm) { setErrorPass("As senhas não coincidem."); return; }
+    if (!userData) return;
+    setSavingPass(true);
+    try {
+      await api.put(`/users/${userId}`, {
+        name: userData.name,
+        email: userData.email,
+        height: userData.height,
+        weight: userData.weight,
+        dateOfBirth: userData.dateOfBirth,
+        gender: userData.gender,
+        goal: userData.goal,
+        password: passwords.next,
+        password_confirmation: passwords.confirm,
+      });
+      setSavedPass(true);
+      setPasswords({ current:"", next:"", confirm:"" });
+      setTimeout(() => onLogout(), 2000);
+    } catch (err) {
+      console.error("Erro ao salvar senha:", err);
+      setErrorPass("Erro ao salvar. Tente novamente.");
+    } finally {
+      setSavingPass(false);
+    }
   };
 
   return (
@@ -66,21 +131,22 @@ export default function Configuracoes({ onBack }) {
 
       <Section title="Endereço de Email">
         <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:12, color:C.muted, marginBottom:14, lineHeight:1.6 }}>
-          Seu email é usado para login e notificações. Ao alterar, você precisará fazer login novamente.
+          Seu email é usado para login e notificações.
         </div>
         <Field label="Novo email" value={email} onChange={setEmail} type="email" />
-        <SaveButton onClick={saveEmail} saved={savedEmail} />
+        {errorEmail && <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:12, color:C.red, marginBottom:12 }}>{errorEmail}</div>}
+        <SaveButton onClick={saveEmail} saving={savingEmail} saved={savedEmail} error={!!errorEmail} />
       </Section>
 
       <Section title="Trocar Senha">
         <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:12, color:C.muted, marginBottom:14, lineHeight:1.6 }}>
-          Use uma senha com pelo menos 8 caracteres.
+          Após trocar a senha você será deslogado automaticamente.
         </div>
         <Field label="Senha atual"          value={passwords.current} onChange={v => setPasswords(p => ({...p, current:v}))} type="password" />
         <Field label="Nova senha"           value={passwords.next}    onChange={v => setPasswords(p => ({...p, next:v}))}    type="password" />
         <Field label="Confirmar nova senha" value={passwords.confirm} onChange={v => setPasswords(p => ({...p, confirm:v}))} type="password" />
-        {passError && <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:12, color:C.red, marginBottom:12 }}>{passError}</div>}
-        <SaveButton onClick={savePassword} saved={savedPass} />
+        {errorPass && <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:12, color:C.red, marginBottom:12 }}>{errorPass}</div>}
+        <SaveButton onClick={savePassword} saving={savingPass} saved={savedPass} error={!!errorPass} />
       </Section>
 
       <Section title="Zona de Perigo">
