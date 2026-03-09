@@ -35,6 +35,15 @@ public class RunWorkoutController {
                 runWorkout.getDuration(), runWorkout.getZone(), runWorkout.getPace(), runWorkout.getUphill(), runWorkout.getDownhill(), runWorkout.getClimate()));
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<RunWorkoutResponseDTO>> findByUserId(@PathVariable Long userId) {
+        List<RunWorkout> workouts = runWorkoutService.findRunWorkoutByUserId(userId);
+        return ResponseEntity.ok(workouts.stream()
+                .map(w -> new RunWorkoutResponseDTO(w.getId(), w.getEffort(), w.getDate(), w.getKm(),
+                        w.getDuration(), w.getZone(), w.getPace(), w.getUphill(), w.getDownhill(), w.getClimate()))
+                .collect(java.util.stream.Collectors.toList()));
+    }
+
     @PostMapping
     public ResponseEntity<RunWorkoutResponseDTO> create(@Valid @RequestBody RunWorkoutRequestDTO runWorkoutRequest) {
         RunWorkoutResponseDTO createdRunWorkout = runWorkoutService.createRunWorkout(runWorkoutRequest);

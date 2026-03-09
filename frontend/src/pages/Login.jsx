@@ -31,13 +31,11 @@ export default function Login({ onLogin }) {
   return (
     <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 28px", fontFamily: "'DM Sans', sans-serif" }}>
 
-      {/* logo */}
       <div style={{ marginBottom: 48, textAlign: "center" }}>
         <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 48, color: C.yellow, letterSpacing: "-0.02em" }}>VOLT</div>
         <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: C.muted, letterSpacing: "0.3em" }}>TRAINING INTELLIGENCE</div>
       </div>
 
-      {/* campos */}
       <div style={{ marginBottom: 14 }}>
         <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: C.muted, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 8 }}>Email</div>
         <input
@@ -57,14 +55,12 @@ export default function Login({ onLogin }) {
         />
       </div>
 
-      {/* erro */}
       {error && (
         <div style={{ background: "rgba(255,59,48,0.1)", border: "1px solid rgba(255,59,48,0.3)", borderRadius: 12, padding: "12px 16px", marginBottom: 20, fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: C.red }}>
           {error}
         </div>
       )}
 
-      {/* botão */}
       <button onClick={handleLogin} disabled={loading} style={{
         width: "100%", background: loading ? "rgba(255,210,0,0.3)" : C.yellow,
         border: "none", borderRadius: 14, padding: "15px",

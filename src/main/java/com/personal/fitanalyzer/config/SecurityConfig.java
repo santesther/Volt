@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(registry -> {
                     registry.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
-                    registry.requestMatchers( "/auth/login", "/auth/**").permitAll();
+                    registry.requestMatchers( "/auth/login", "/auth/**", "/strength-workouts/**", "/run-workouts/**").permitAll();
                     registry.anyRequest().authenticated();
                 })
                 .userDetailsService(customUserDetailsService)

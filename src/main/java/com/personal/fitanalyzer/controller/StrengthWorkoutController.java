@@ -34,6 +34,14 @@ public class StrengthWorkoutController {
         return ResponseEntity.ok(strengthWorkoutService.toResponse(workout));
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<StrengthWorkoutResponseDTO>> findByUserId(@PathVariable Long userId) {
+        List<StrengthWorkout> workouts = strengthWorkoutService.findStrengthWorkoutByUserId(userId);
+        return ResponseEntity.ok(workouts.stream()
+                .map(strengthWorkoutService::toResponse)
+                .collect(java.util.stream.Collectors.toList()));
+    }
+
     @PostMapping
     public ResponseEntity<StrengthWorkoutResponseDTO> create(@Valid @RequestBody StrengthWorkoutRequestDTO strengthWorkoutRequest) {
         StrengthWorkoutResponseDTO createdStrengthWorkout = strengthWorkoutService.createStrengthWorkout(strengthWorkoutRequest);

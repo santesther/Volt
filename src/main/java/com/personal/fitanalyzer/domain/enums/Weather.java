@@ -8,5 +8,6 @@ public enum Weather {
     WINDY,
     STORMY,
     CLEAR,
-    HUMID;
+    HUMID,
+    PLEASANT;
 }
