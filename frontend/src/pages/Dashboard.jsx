@@ -9,10 +9,6 @@ export default function Dashboard({ onRegister, userId }) {
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const [suggestion, setSuggestion] = useState(null);
   const [loading, setLoading] = useState(true);
-  const muscles = [
-    { name:"Peito", fatigue:70 }, { name:"Tríceps", fatigue:65 },
-    { name:"Costas", fatigue:10 }, { name:"Pernas", fatigue:5 },
-  ];
 
   useEffect(() => {
     api.post(`/suggestions/${userId}`, { painfulMuscleIds: [] })
@@ -37,12 +33,19 @@ export default function Dashboard({ onRegister, userId }) {
         <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:13, color:"rgba(0,0,0,0.45)", marginTop:4 }}>Carga disponível</div>
       </div>
 
-      <div style={{ marginBottom:22 }}>
-        <SectionLabel>Sistema Muscular</SectionLabel>
-        <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
-          {muscles.map(m => <MuscleChip key={m.name} name={m.name} fatigue={m.fatigue} />)}
+      {suggestion?.muscleFatigue && Object.keys(suggestion.muscleFatigue).length > 0 && (
+        <div style={{ marginBottom:22 }}>
+          <SectionLabel>Sistema Muscular</SectionLabel>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
+            {Object.entries(suggestion.muscleFatigue)
+              .filter(([, v]) => v > 0)
+              .sort(([, a], [, b]) => b - a)
+              .map(([name, value]) => (
+                <MuscleChip key={name} name={name} fatigue={Math.min(100, Math.round(value))} />
+              ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {suggestion?.type === "REST" ? (
         <div style={{ marginBottom:18, background:"rgba(255,210,0,0.07)", border:"1px solid rgba(255,210,0,0.2)", borderRadius:16, padding:"14px 16px" }}>
