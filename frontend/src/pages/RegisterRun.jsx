@@ -1,7 +1,72 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../api/api";
 import { C, ZONE_OPTIONS, WEATHER_OPTIONS, WEATHER_LABELS, RUNTYPE_OPTIONS, RUNTYPE_LABELS } from "../utils/constants";
 import { SectionLabel, NumericStepper, EffortSlider } from "../utils/components";
+
+function PainfulMusclesModal({ workoutId, userId, onDone }) {
+  const [muscleGroups, setMuscleGroups] = useState([]);
+  const [selected, setSelected] = useState([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    api.get("/muscle-groups")
+      .then(res => setMuscleGroups(res.data))
+      .catch(err => console.error(err));
+  }, []);
+
+  const toggle = (id) => {
+    setSelected(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await api.patch(`/run-workouts/${workoutId}/painful-muscles`, selected);
+    } catch (err) {
+      console.error("Erro ao salvar músculos doloridos:", err);
+    } finally {
+      setSaving(false);
+      onDone();
+    }
+  };
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", zIndex:999, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+      <div style={{ background:"#111", borderRadius:"24px 24px 0 0", padding:"28px 24px 40px", width:"100%", maxWidth:480, border:"1px solid rgba(255,255,255,0.08)", borderBottom:"none" }}>
+        <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:20, color:C.text, marginBottom:6 }}>Algum músculo doeu?</div>
+        <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.muted, marginBottom:20, lineHeight:1.6 }}>
+          Selecione os músculos que ficaram doloridos/pesados durante ou após a corrida. Isso ajuda o motor de sugestões a evitá-los nos próximos treinos.
+        </div>
+
+        <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:24 }}>
+          {muscleGroups.map(m => {
+            const active = selected.includes(m.id);
+            return (
+              <button key={m.id} onClick={() => toggle(m.id)} style={{
+                padding:"8px 14px", borderRadius:100, cursor:"pointer",
+                background: active ? "rgba(255,59,48,0.12)" : C.graphite,
+                border:`1px solid ${active ? C.red : "rgba(255,255,255,0.08)"}`,
+                fontFamily:"'DM Sans', sans-serif", fontSize:13,
+                color: active ? C.red : C.muted, transition:"all 0.15s",
+              }}>
+                {active ? "🔴 " : ""}{m.name}
+              </button>
+            );
+          })}
+        </div>
+
+        <button onClick={handleSave} disabled={saving} style={{
+          width:"100%", background: saving ? "rgba(255,210,0,0.3)" : C.yellow,
+          border:"none", borderRadius:14, padding:"14px",
+          fontFamily:"'Space Mono', monospace", fontSize:11, fontWeight:700,
+          letterSpacing:"0.2em", color:"#050505", cursor: saving ? "not-allowed" : "pointer",
+        }}>
+          {saving ? "SALVANDO..." : selected.length > 0 ? "SALVAR E CONTINUAR" : "NENHUM — CONTINUAR"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
   const today = new Date().toISOString().slice(0,16);
@@ -17,6 +82,8 @@ export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [showPainModal, setShowPainModal] = useState(false);
+  const [savedWorkoutId, setSavedWorkoutId] = useState(null);
   const set = f => v => setForm(p => ({...p, [f]:v}));
 
   const pace = form.duration > 0 && form.km > 0 ? (form.duration / form.km).toFixed(2) : "—";
@@ -28,10 +95,13 @@ export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
       const res = await api.post("/run-workouts", {
         userId, effort: form.effort, date: form.date + ":00",
         km: form.km, duration: form.duration, zone: form.zone,
-        uphill: form.uphill, downhill: form.downhill, weather: form.weather, runType: form.runType,
+        uphill: form.uphill, downhill: form.downhill,
+        weather: form.weather, runType: form.runType,
+        painfulMuscleIds: [],
       });
       setSaved(true);
-      setTimeout(() => { setSaved(false); onSave(res.data.id); }, 1800);
+      setSavedWorkoutId(res.data.id);
+      setTimeout(() => setShowPainModal(true), 800);
     } catch (err) {
       setError("Erro ao salvar corrida. Tente novamente.");
       console.error(err);
@@ -40,8 +110,21 @@ export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
     }
   };
 
+  const handleModalDone = () => {
+    setShowPainModal(false);
+    onSave(savedWorkoutId);
+  };
+
   return (
     <div className="volt-screen">
+      {showPainModal && (
+        <PainfulMusclesModal
+          workoutId={savedWorkoutId}
+          userId={userId}
+          onDone={handleModalDone}
+        />
+      )}
+
       <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:24 }}>
         <button onClick={onBack} style={{ background:C.graphite, border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, width:40, height:40, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, color:C.text, flexShrink:0 }}>←</button>
         <div>
@@ -111,7 +194,7 @@ export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
 
       {error && <div style={{ background:"rgba(255,59,48,0.08)", border:"1px solid rgba(255,59,48,0.25)", borderRadius:12, padding:"12px 14px", marginBottom:16, fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.red }}>{error}</div>}
 
-      <button onClick={handleSave} disabled={saving} style={{ width:"100%", background: saved ? "rgba(255,210,0,0.15)" : saving ? "rgba(255,210,0,0.4)" : C.yellow, border: saved ? `1px solid ${C.yellow}` : "none", borderRadius:14, padding:"14px", cursor: saving ? "not-allowed" : "pointer", fontFamily:"'Space Mono', monospace", fontSize:11, fontWeight:700, letterSpacing:"0.2em", color: saved ? C.yellow : "#050505", transition:"all 0.3s", marginBottom:24 }}>
+      <button onClick={handleSave} disabled={saving || saved} style={{ width:"100%", background: saved ? "rgba(255,210,0,0.15)" : saving ? "rgba(255,210,0,0.4)" : C.yellow, border: saved ? `1px solid ${C.yellow}` : "none", borderRadius:14, padding:"14px", cursor: saving || saved ? "not-allowed" : "pointer", fontFamily:"'Space Mono', monospace", fontSize:11, fontWeight:700, letterSpacing:"0.2em", color: saved ? C.yellow : "#050505", transition:"all 0.3s", marginBottom:24 }}>
         {saved ? "✓ TREINO REGISTRADO" : saving ? "SALVANDO..." : "SALVAR TREINO"}
       </button>
     </div>

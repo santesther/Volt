@@ -26,5 +26,6 @@ public record RunWorkoutRequestDTO (
         @NotNull(message="O clina é obrigatório")
         Weather weather,
         @NotNull(message = "O usuário é obrigatório")
-        Long userId
+        Long userId,
+        List<Long> painfulMuscleIds
 ) {}

@@ -21,21 +21,21 @@ import java.util.stream.Collectors;
 public class RunWorkoutService {
 
     private final RunWorkoutRepository runWorkoutRepository;
-
-
+    private final MuscleGroupRepository muscleGroupRepository;
     private final UserRepository userRepository;
 
-    public RunWorkoutService(RunWorkoutRepository runWorkoutRepository, UserRepository userRepository) {
+    public RunWorkoutService(RunWorkoutRepository runWorkoutRepository, UserRepository userRepository, MuscleGroupRepository muscleGroupRepository) {
         this.runWorkoutRepository = runWorkoutRepository;
         this.userRepository = userRepository;
+        this.muscleGroupRepository = muscleGroupRepository;
     }
 
     @Transactional
     public RunWorkoutResponseDTO createRunWorkout(RunWorkoutRequestDTO runWorkoutRequest) {
-        RunWorkout runWorkout = toEntity(runWorkoutRequest);          // converte DTO → entidade
+        RunWorkout runWorkout = toEntity(runWorkoutRequest);
         RunWorkout savedRunWorkout = runWorkoutRepository.save(runWorkout);
 
-        return new RunWorkoutResponseDTO(                 // converte entidade → ResponseDTO e retorna
+        return new RunWorkoutResponseDTO(
                 savedRunWorkout.getId(),
                 savedRunWorkout.getEffort(),
                 savedRunWorkout.getDate(),
@@ -79,9 +79,9 @@ public class RunWorkoutService {
         runWorkout.setDownhill(runWorkoutRequest.downhill());
         runWorkout.setClimate(runWorkoutRequest.weather());
 
-        RunWorkout savedRunWorkout = runWorkoutRepository.save(runWorkout); // salva as alterações
+        RunWorkout savedRunWorkout = runWorkoutRepository.save(runWorkout);
 
-        return new RunWorkoutResponseDTO(                 // retorna o ResponseDTO
+        return new RunWorkoutResponseDTO(
                 savedRunWorkout.getId(),
                 savedRunWorkout.getEffort(),
                 savedRunWorkout.getDate(),
@@ -103,6 +103,17 @@ public class RunWorkoutService {
         runWorkoutRepository.deleteById(id);
     }
 
+    @Transactional
+    public void updatePainfulMuscles(Long id, List<Long> muscleIds) {
+        RunWorkout runWorkout = findRunWorkoutById(id);
+        List<MuscleGroups> muscles = muscleIds.stream()
+                .map(mid -> muscleGroupRepository.findById(mid)
+                        .orElseThrow(() -> new ResourceNotFoundException("Grupo muscular não encontrado: " + mid)))
+                .collect(Collectors.toList());
+        runWorkout.setPainfulMuscles(muscles);
+        runWorkoutRepository.save(runWorkout);
+    }
+
     private RunWorkout toEntity(RunWorkoutRequestDTO dto) {
         User user = userRepository.findById(dto.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
@@ -120,6 +131,13 @@ public class RunWorkoutService {
         runWorkout.setDownhill(dto.downhill());
         runWorkout.setClimate(dto.weather());
         runWorkout.setPace(pace);
+        if (dto.painfulMuscleIds() != null && !dto.painfulMuscleIds().isEmpty()) {
+            List<MuscleGroups> painful = dto.painfulMuscleIds().stream()
+                    .map(id -> muscleGroupRepository.findById(id)
+                            .orElseThrow(() -> new ResourceNotFoundException("Grupo muscular não encontrado: " + id)))
+                    .collect(Collectors.toList());
+            runWorkout.setPainfulMuscles(painful);
+        }
         return runWorkout;
     }
 }

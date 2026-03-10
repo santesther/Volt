@@ -4,9 +4,14 @@ import com.personal.fitanalyzer.domain.enums.Weather;
 import com.personal.fitanalyzer.domain.enums.Zone;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "run_workout")
@@ -19,6 +24,16 @@ public class RunWorkout extends Workout {
     private Integer uphill;
     private Integer downhill;
     private Weather climate;
+    @ManyToMany
+    @JoinTable(
+            name = "run_workout_painful_muscles",
+            joinColumns = @JoinColumn(name = "run_workout_id"),
+            inverseJoinColumns = @JoinColumn(name = "muscle_group_id")
+    )
+    private List<MuscleGroups> painfulMuscles = new ArrayList<>();
+
+    public List<MuscleGroups> getPainfulMuscles() { return painfulMuscles; }
+    public void setPainfulMuscles(List<MuscleGroups> m) { this.painfulMuscles = m; }
 
     public RunWorkout(){
     }

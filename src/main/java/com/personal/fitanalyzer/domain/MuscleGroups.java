@@ -72,4 +72,17 @@ public class MuscleGroups {
     public void setAntagonist(MuscleGroups antagonist) {
         this.antagonist = antagonist;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MuscleGroups)) return false;
+        MuscleGroups that = (MuscleGroups) o;
+        return java.util.Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(id);
+    }
 }
