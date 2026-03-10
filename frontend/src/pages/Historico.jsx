@@ -28,6 +28,12 @@ export default function Historico({ userId, highlightId }) {
       + " · " + d.toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" });
   };
 
+  const formatDuration = (minutes) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return h > 0 ? `${h}h${String(m).padStart(2,"0")}` : `${m}min`;
+  };
+
   const workoutLabel = (w) => w.workoutType === "RUN" ? `${w.km}KM` : w.muscles?.map(m => m.name).join(" + ") || "TREINO";
   const pillLabel    = (w) => w.workoutType === "RUN" ? "🏃" : w.muscles?.[0]?.name?.split(" ")[0] || "TREINO";
 
@@ -74,7 +80,7 @@ export default function Historico({ userId, highlightId }) {
         <>
           <div style={{ display:"flex", gap:10, marginBottom:16 }}>
             {[
-              { label:"DURAÇÃO", value: selected.durationMinutes, unit:"min" },
+              { label:"DURAÇÃO", value: formatDuration(selected.durationMinutes), unit:"" },
               { label:"ESFORÇO", value: selected.effort, unit:"/10" },
               { label:"SÉRIES",  value: selected.sets?.length || 0, unit:"" },
             ].map(s => (
@@ -120,7 +126,7 @@ export default function Historico({ userId, highlightId }) {
           <div style={{ display:"flex", gap:10, marginBottom:16, flexWrap:"wrap" }}>
             {[
               { label:"DISTÂNCIA", value: selected.km,                  unit:"km"     },
-              { label:"DURAÇÃO",   value: selected.duration,             unit:"min"    },
+              { label:"DURAÇÃO", value: formatDuration(selected.duration), unit:"" },
               { label:"PACE",      value: selected.pace?.toFixed(2),     unit:"min/km" },
               { label:"ESFORÇO",   value: selected.effort,               unit:"/10"    },
             ].map(s => (

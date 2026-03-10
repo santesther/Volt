@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../api/api";
 import { C, ZONE_OPTIONS, WEATHER_OPTIONS, WEATHER_LABELS, RUNTYPE_OPTIONS, RUNTYPE_LABELS } from "../utils/constants";
-import { SectionLabel, NumericStepper, EffortSlider } from "../utils/components";
+import { SectionLabel, NumericStepper, DurationStepper, EffortSlider } from "../utils/components";
 
 function PainfulMusclesModal({ workoutId, userId, onDone }) {
   const [muscleGroups, setMuscleGroups] = useState([]);
@@ -153,7 +153,7 @@ export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
 
       <div style={{ display:"flex", gap:10, marginBottom:16 }}>
         <NumericStepper label="Distância" value={form.km} onChange={set("km")} min={1} max={100} unit="km" />
-        <NumericStepper label="Duração" value={form.duration} onChange={set("duration")} min={5} max={360} unit="min" />
+        <DurationStepper label="Duração" value={form.duration} onChange={set("duration")} />
       </div>
 
       <div style={{ marginBottom:16 }}>

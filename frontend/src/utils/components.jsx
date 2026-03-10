@@ -39,16 +39,83 @@ export function MuscleChip({ name, fatigue }) {
   );
 }
 
-export function NumericStepper({ label, value, onChange, min=1, max=99, unit="" }) {
+export function NumericStepper({ label, value, onChange, min, max, unit }) {
+  const [editing, setEditing] = useState(false);
+  const [raw, setRaw] = useState("");
+
+  const handleBlur = () => {
+    const parsed = parseFloat(raw);
+    if (!isNaN(parsed)) onChange(Math.min(max, Math.max(min, parsed)));
+    setEditing(false);
+  };
+
   return (
     <div style={{ flex:1 }}>
       <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>{label}</div>
-      <div style={{ display:"flex", alignItems:"center", background:C.graphite, borderRadius:12, border:"1px solid rgba(255,255,255,0.08)", overflow:"hidden" }}>
-        <button onClick={() => onChange(Math.max(min, value - 1))} style={{ width:40, height:44, background:"none", border:"none", color:C.muted, fontSize:18, cursor:"pointer", flexShrink:0 }}>−</button>
-        <div style={{ flex:1, textAlign:"center", fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:20, color:C.text }}>
-          {value}<span style={{ fontSize:11, color:C.muted, fontFamily:"'DM Sans', sans-serif", fontWeight:400 }}>{unit}</span>
-        </div>
-        <button onClick={() => onChange(Math.min(max, value + 1))} style={{ width:40, height:44, background:"none", border:"none", color:C.yellow, fontSize:18, cursor:"pointer", flexShrink:0 }}>+</button>
+      <div style={{ background:C.graphite, borderRadius:12, border:"1px solid rgba(255,255,255,0.08)", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 10px" }}>
+        <button onClick={() => onChange(Math.max(min, value - 1))} style={{ background:"none", border:"none", color:C.muted, fontSize:18, cursor:"pointer", padding:"0 4px", lineHeight:1 }}>−</button>
+        {editing ? (
+          <input
+            autoFocus
+            type="number"
+            defaultValue={value}
+            onChange={e => setRaw(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={e => e.key === "Enter" && handleBlur()}
+            style={{ background:"none", border:"none", outline:"none", color:C.yellow, fontFamily:"'Space Mono', monospace", fontSize:13, fontWeight:700, width:60, textAlign:"center", colorScheme:"dark" }}
+          />
+        ) : (
+          <div onClick={() => { setRaw(String(value)); setEditing(true); }} style={{ fontFamily:"'Space Mono', monospace", fontSize:13, fontWeight:700, color:C.yellow, cursor:"text", minWidth:60, textAlign:"center" }}>
+            {value}<span style={{ fontSize:9, color:C.muted, fontWeight:400 }}> {unit}</span>
+          </div>
+        )}
+        <button onClick={() => onChange(Math.min(max, value + 1))} style={{ background:"none", border:"none", color:C.muted, fontSize:18, cursor:"pointer", padding:"0 4px", lineHeight:1 }}>+</button>
+      </div>
+    </div>
+  );
+}
+
+export function DurationStepper({ label, value, onChange }) {
+  const hours = Math.floor(value / 60);
+  const mins = value % 60;
+  const display = `${String(hours).padStart(2,"0")}:${String(mins).padStart(2,"0")}`;
+
+  const [editing, setEditing] = useState(false);
+  const [raw, setRaw] = useState("");
+
+  const handleBlur = () => {
+    if (raw.includes(":")) {
+      const [h, m] = raw.split(":").map(Number);
+      if (!isNaN(h) && !isNaN(m)) onChange(Math.min(720, Math.max(1, h * 60 + m)));
+    } else {
+      const parsed = parseInt(raw);
+      if (!isNaN(parsed)) onChange(Math.min(720, Math.max(1, parsed)));
+    }
+    setEditing(false);
+  };
+
+  return (
+    <div style={{ flex:1 }}>
+      <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>{label}</div>
+      <div style={{ background:C.graphite, borderRadius:12, border:"1px solid rgba(255,255,255,0.08)", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 10px" }}>
+        <button onClick={() => onChange(Math.max(1, value - 1))} style={{ background:"none", border:"none", color:C.muted, fontSize:18, cursor:"pointer", padding:"0 4px", lineHeight:1 }}>−</button>
+        {editing ? (
+          <input
+            autoFocus
+            type="text"
+            defaultValue={display}
+            placeholder="HH:MM"
+            onChange={e => setRaw(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={e => e.key === "Enter" && handleBlur()}
+            style={{ background:"none", border:"none", outline:"none", color:C.yellow, fontFamily:"'Space Mono', monospace", fontSize:13, fontWeight:700, width:64, textAlign:"center" }}
+          />
+        ) : (
+          <div onClick={() => { setRaw(display); setEditing(true); }} style={{ fontFamily:"'Space Mono', monospace", fontSize:13, fontWeight:700, color:C.yellow, cursor:"text", minWidth:64, textAlign:"center" }}>
+            {display}<span style={{ fontSize:9, color:C.muted, fontWeight:400 }}> h</span>
+          </div>
+        )}
+        <button onClick={() => onChange(Math.min(720, value + 1))} style={{ background:"none", border:"none", color:C.muted, fontSize:18, cursor:"pointer", padding:"0 4px", lineHeight:1 }}>+</button>
       </div>
     </div>
   );
