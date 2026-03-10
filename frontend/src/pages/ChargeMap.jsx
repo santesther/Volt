@@ -91,15 +91,17 @@ export default function ChargeMap({ userId }) {
           <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.muted }}>Nenhum treino registrado ainda.</div>
         ) : (
           <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-            {muscles.map(m => (
-              <div key={m.name} style={{ display:"flex", alignItems:"center", gap:10 }}>
-                <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:12, color:C.text, width:80, flexShrink:0 }}>{m.name}</div>
-                <div style={{ flex:1, height:4, background:"rgba(255,255,255,0.06)", borderRadius:2, overflow:"hidden" }}>
-                  <div style={{ width:`${m.fatigue}%`, height:"100%", background: m.recovering ? C.red : C.yellow, borderRadius:2, transition:"width 1s ease" }} />
-                </div>
-                <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color: m.recovering ? C.red : C.muted, width:34, textAlign:"right" }}>{m.fatigue}%</div>
-              </div>
-            ))}
+           {muscles.map(m => (
+             <div key={m.name}>
+               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:5 }}>
+                 <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:12, color:C.text }}>{m.name}</div>
+                 <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color: m.recovering ? C.red : C.muted }}>{m.fatigue}%</div>
+               </div>
+               <div style={{ flex:1, height:4, background:"rgba(255,255,255,0.06)", borderRadius:2, overflow:"hidden" }}>
+                 <div style={{ width:`${m.fatigue}%`, height:"100%", background: m.recovering ? C.red : C.yellow, borderRadius:2, transition:"width 1s ease" }} />
+               </div>
+             </div>
+           ))}
           </div>
         )}
       </div>
