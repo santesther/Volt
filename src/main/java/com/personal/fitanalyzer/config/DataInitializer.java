@@ -48,7 +48,8 @@ public class DataInitializer implements ApplicationRunner {
                 new Object[]{"CALVES",              48f,  Size.SMALL},
                 new Object[]{"ABS",                 24f,  Size.MEDIUM},
                 new Object[]{"CORE",                24f,  Size.MEDIUM},
-                new Object[]{"LOWER_BACK",          72f,  Size.MEDIUM}
+                new Object[]{"LOWER_BACK",          72f,  Size.MEDIUM},
+                new Object[]{"KNEES",               72f,  Size.SMALL}
         );
 
         for (Object[] g : groups) {
