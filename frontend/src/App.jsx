@@ -14,13 +14,18 @@ export default function App() {
     if (savedUserId) setUserId(Number(savedUserId));
   }, []);
 
- const handleLogin = async (id) => {
+ const handleLogin = async (id, isNewUser = false) => {
    setUserId(id);
+   setScreen("login");
+   if (isNewUser) {
+     setNeedsPlan(true);
+     return;
+   }
    try {
      await api.get(`/training-plans/user/${id}`);
      setNeedsPlan(false);
    } catch {
-     setNeedsPlan(true);
+     setNeedsPlan(false);
    }
  };
 

@@ -75,7 +75,7 @@ export default function Register({ onLogin, onBack }) {
       const { token, userId } = res.data;
       localStorage.setItem("token", token);
       localStorage.setItem("userId", userId);
-      onLogin(userId);
+      onLogin(userId, true);
     } catch (err) {
       const msg = err.response?.data?.message || "Erro ao criar conta. Tente novamente.";
       setError(msg);

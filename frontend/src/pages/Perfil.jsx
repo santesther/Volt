@@ -87,37 +87,46 @@ export default function Perfil({ userId, onOpenSettings, onLogout, onEditPlan })
     }
   };
 
-  const saveInfo = async () => {
-    setErrorInfo(false);
-    setSavingInfo(true);
-    try {
-      await api.put(`/users/${userId}`, {
-        name: form.name,
-        email: form.email,
-        height: parseFloat(form.height),
-        weight: parseFloat(form.weight),
-        dateOfBirth: form.dateOfBirth,
-        gender: form.gender,
-        goal: form.goal,
-        password: "",
-        password_confirmation: "",
-      });
-      setSavedInfo(true);
-      setTimeout(() => setSavedInfo(false), 2500);
-    } catch (err) {
-      console.error("Erro ao salvar perfil:", err);
-      setErrorInfo(true);
-      setTimeout(() => setErrorInfo(false), 3000);
-    } finally {
-      setSavingInfo(false);
-    }
-  };
+ const saveInfo = async () => {
+   setErrorInfo(false);
+   setSavingInfo(true);
+   try {
+     const res = await api.put(`/users/${userId}`, {
+       name: form.name,
+       email: form.email,
+       height: parseFloat(form.height),
+       weight: parseFloat(form.weight),
+       dateOfBirth: form.dateOfBirth,
+       gender: form.gender,
+       goal: form.goal,
+       password: "",
+       password_confirmation: "",
+     });
+       setForm({
+            name: res.data.name || "",
+            email: res.data.email || "",
+            height: res.data.height?.toString() || "",
+            weight: res.data.weight?.toString() || "",
+            dateOfBirth: res.data.dateOfBirth || "",
+            gender: res.data.gender || "F",
+            goal: res.data.goal || "HYPERTROPHY",
+          });
+          setSavedInfo(true);
+          setTimeout(() => setSavedInfo(false), 2500);
+        } catch (err) {
+          console.error("Erro ao salvar perfil:", err);
+          setErrorInfo(true);
+          setTimeout(() => setErrorInfo(false), 3000);
+        } finally {
+          setSavingInfo(false);
+        }
+      };
 
   const saveGoal = async () => {
     setErrorGoal(false);
     setSavingGoal(true);
     try {
-      await api.put(`/users/${userId}`, {
+      const res = await api.put(`/users/${userId}`, {
         name: form.name,
         email: form.email,
         height: parseFloat(form.height),
@@ -128,7 +137,8 @@ export default function Perfil({ userId, onOpenSettings, onLogout, onEditPlan })
         password: "",
         password_confirmation: "",
       });
-      setForm(f => ({ ...f, goal: activeGoal }));
+      setForm(f => ({ ...f, goal: res.data.goal }));
+      setActiveGoal(res.data.goal);
       setSavedGoal(true);
       setTimeout(() => setSavedGoal(false), 2500);
     } catch (err) {
