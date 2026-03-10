@@ -1,5 +1,6 @@
 package com.personal.fitanalyzer.service;
 
+import com.personal.fitanalyzer.config.SecurityUtils;
 import com.personal.fitanalyzer.domain.MuscleGroups;
 import com.personal.fitanalyzer.domain.RunWorkout;
 import com.personal.fitanalyzer.domain.StrengthWorkout;
@@ -45,8 +46,10 @@ public class SuggestionEngineService {
     private final MuscleGroupRepository muscleGroupRepository;
     private final TrainingPlanRepository trainingPlanRepository;
     private final RunWorkoutRepository runWorkoutRepository;
+    private final SecurityUtils securityUtils;
 
     public SuggestionResponseDTO getSuggestion(Long userId, SuggestionRequestDTO request) {
+        securityUtils.validateUserAccess(userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 

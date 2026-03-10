@@ -1,5 +1,6 @@
 package com.personal.fitanalyzer.service;
 
+import com.personal.fitanalyzer.config.SecurityUtils;
 import com.personal.fitanalyzer.domain.Exercise;
 import com.personal.fitanalyzer.domain.MuscleGroups;
 import com.personal.fitanalyzer.domain.StrengthWorkout;
@@ -28,9 +29,11 @@ public class StrengthWorkoutService {
     private final StrengthWorkoutRepository strengthWorkoutRepository;
     private final UserRepository userRepository;
     private final ExerciseRepository exerciseRepository;
+    private final SecurityUtils securityUtils;
 
     @Transactional
     public StrengthWorkoutResponseDTO createStrengthWorkout(StrengthWorkoutRequestDTO request) {
+        securityUtils.validateUserAccess(request.userId());
         StrengthWorkout workout = toEntity(request);
         StrengthWorkout saved = strengthWorkoutRepository.save(workout);
         return toResponse(saved);

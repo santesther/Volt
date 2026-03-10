@@ -1,5 +1,6 @@
 package com.personal.fitanalyzer.service;
 
+import com.personal.fitanalyzer.config.SecurityUtils;
 import com.personal.fitanalyzer.domain.User;
 import com.personal.fitanalyzer.domain.enums.Role;
 import com.personal.fitanalyzer.dto.UserRequestDTO;
@@ -24,10 +25,13 @@ public class UserService {
 
     private final TrainingPlanRepository trainingPlanRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, TrainingPlanRepository trainingPlanRepository) {
+    private final SecurityUtils securityUtils;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, TrainingPlanRepository trainingPlanRepository, SecurityUtils securityUtils) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.trainingPlanRepository = trainingPlanRepository;
+        this.securityUtils = securityUtils;
     }
 
     @Transactional
@@ -67,6 +71,7 @@ public class UserService {
 
     @Transactional
     public UserResponseDTO updateUser(Long id, UserRequestDTO userRequest) {
+        securityUtils.validateUserAccess(id);
         User user = findUserById(id);
         user.setName(userRequest.name());
         user.setEmail(userRequest.email());

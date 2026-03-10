@@ -1,5 +1,6 @@
 package com.personal.fitanalyzer.service;
 
+import com.personal.fitanalyzer.config.SecurityUtils;
 import com.personal.fitanalyzer.domain.MuscleGroups;
 import com.personal.fitanalyzer.domain.TrainingDay;
 import com.personal.fitanalyzer.domain.TrainingDayEntry;
@@ -28,9 +29,11 @@ public class TrainingPlanService {
     private final TrainingPlanRepository trainingPlanRepository;
     private final UserRepository userRepository;
     private final MuscleGroupRepository muscleGroupRepository;
+    private final SecurityUtils securityUtils;
 
     @Transactional
     public TrainingPlanResponseDTO createOrUpdate(TrainingPlanRequestDTO request) {
+        securityUtils.validateUserAccess(request.userId());
         User user = userRepository.findById(request.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 

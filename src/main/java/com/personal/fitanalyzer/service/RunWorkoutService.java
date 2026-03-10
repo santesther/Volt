@@ -1,5 +1,6 @@
 package com.personal.fitanalyzer.service;
 
+import com.personal.fitanalyzer.config.SecurityUtils;
 import com.personal.fitanalyzer.domain.MuscleGroups;
 import com.personal.fitanalyzer.domain.RunWorkout;
 import com.personal.fitanalyzer.domain.StrengthWorkout;
@@ -23,15 +24,18 @@ public class RunWorkoutService {
     private final RunWorkoutRepository runWorkoutRepository;
     private final MuscleGroupRepository muscleGroupRepository;
     private final UserRepository userRepository;
+    private final SecurityUtils securityUtils;
 
-    public RunWorkoutService(RunWorkoutRepository runWorkoutRepository, UserRepository userRepository, MuscleGroupRepository muscleGroupRepository) {
+    public RunWorkoutService(RunWorkoutRepository runWorkoutRepository, UserRepository userRepository, MuscleGroupRepository muscleGroupRepository, SecurityUtils securityUtils) {
         this.runWorkoutRepository = runWorkoutRepository;
         this.userRepository = userRepository;
         this.muscleGroupRepository = muscleGroupRepository;
+        this.securityUtils = securityUtils;
     }
 
     @Transactional
     public RunWorkoutResponseDTO createRunWorkout(RunWorkoutRequestDTO runWorkoutRequest) {
+        securityUtils.validateUserAccess(runWorkoutRequest.userId());
         RunWorkout runWorkout = toEntity(runWorkoutRequest);
         RunWorkout savedRunWorkout = runWorkoutRepository.save(runWorkout);
 
@@ -106,6 +110,7 @@ public class RunWorkoutService {
     @Transactional
     public void updatePainfulMuscles(Long id, List<Long> muscleIds) {
         RunWorkout runWorkout = findRunWorkoutById(id);
+        securityUtils.validateUserAccess(runWorkout.getUser().getId());
         List<MuscleGroups> muscles = muscleIds.stream()
                 .map(mid -> muscleGroupRepository.findById(mid)
                         .orElseThrow(() -> new ResourceNotFoundException("Grupo muscular não encontrado: " + mid)))
