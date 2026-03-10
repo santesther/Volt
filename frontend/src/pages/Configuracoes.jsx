@@ -125,7 +125,7 @@ export default function Configuracoes({ userId, onBack, onLogout }) {
         >←</button>
         <div>
           <SectionLabel>Perfil</SectionLabel>
-          <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:28, letterSpacing:"-0.02em", lineHeight:1 }}>Configurações</div>
+          <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:"clamp(20px, 6vw, 28px)", letterSpacing:"-0.02em", lineHeight:1 }}>Configurações</div>
         </div>
       </div>
 

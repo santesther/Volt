@@ -163,7 +163,7 @@ export default function Perfil({ userId, onOpenSettings, onLogout, onEditPlan })
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:24 }}>
         <div>
           <SectionLabel>Perfil</SectionLabel>
-          <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:32, letterSpacing:"-0.02em" }}>Suas Informações</div>
+          <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:"clamp(22px, 7vw, 32px)", letterSpacing:"-0.02em" }}>Suas Informações</div>
         </div>
         <button onClick={onOpenSettings} style={{ background:C.graphite, border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, width:42, height:42, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, transition:"border-color 0.2s", marginTop:4 }}
           onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(255,210,0,0.4)"}

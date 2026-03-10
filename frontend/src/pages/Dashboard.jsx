@@ -83,7 +83,7 @@ useEffect(() => {
             <>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12 }}>
                 <div>
-                  <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:20, color:C.text, marginBottom:2 }}>
+                  <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:20, color:C.text, marginBottom:2, wordBreak:"break-word", overflowWrap:"anywhere" }}>
                     {suggestion?.suggestedMuscles?.map(m => m.name).join(" + ") || "—"}
                   </div>
                   <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:11, color:C.muted }}>
