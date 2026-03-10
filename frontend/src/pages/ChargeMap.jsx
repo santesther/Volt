@@ -55,17 +55,17 @@ export default function ChargeMap({ userId }) {
 
       <div style={{ background:C.g2, borderRadius:18, padding:20, marginBottom:14, border:"1px solid rgba(255,210,0,0.06)", display:"flex", flexDirection:"column", alignItems:"center", gap:14 }}>
         <svg width="80" height="140" viewBox="0 0 60 120" fill="none">
-          <circle cx="30" cy="10" r="9" fill={C.graphite} stroke="rgba(255,210,0,0.3)" strokeWidth="1.5"/>
-          <rect x="18" y="22" width="24" height="32" rx="4"
-            fill={segColor(chestF)} opacity={segOpacity(chestF)}/>
-          <rect x="6" y="22" width="10" height="28" rx="4"
-            fill={segColor(armF)} opacity={segOpacity(armF)}/>
-          <rect x="44" y="22" width="10" height="28" rx="4"
-            fill={segColor(armF)} opacity={segOpacity(armF)}/>
-          <rect x="19" y="57" width="10" height="36" rx="4"
-            fill={segColor(legF)} opacity={segOpacity(legF)}/>
-          <rect x="31" y="57" width="10" height="36" rx="4"
-            fill={segColor(legF)} opacity={segOpacity(legF)}/>
+          <circle cx="30" cy="10" r="9" fill="rgba(255,255,255,0.15)" stroke="rgba(255,210,0,0.3)" strokeWidth="1.5"/>
+          <rect x="18" y="22" width="24" height="32" rx="4" fill="rgba(255,255,255,0.1)"/>
+          <rect x="6" y="22" width="10" height="28" rx="4" fill="rgba(255,255,255,0.1)"/>
+          <rect x="44" y="22" width="10" height="28" rx="4" fill="rgba(255,255,255,0.1)"/>
+          <rect x="19" y="57" width="10" height="36" rx="4" fill="rgba(255,255,255,0.1)"/>
+          <rect x="31" y="57" width="10" height="36" rx="4" fill="rgba(255,255,255,0.1)"/>
+          <rect x="18" y="22" width="24" height="32" rx="4" fill={segColor(chestF)} opacity={segOpacity(chestF)}/>
+          <rect x="6" y="22" width="10" height="28" rx="4" fill={segColor(armF)} opacity={segOpacity(armF)}/>
+          <rect x="44" y="22" width="10" height="28" rx="4" fill={segColor(armF)} opacity={segOpacity(armF)}/>
+          <rect x="19" y="57" width="10" height="36" rx="4" fill={segColor(legF)} opacity={segOpacity(legF)}/>
+          <rect x="31" y="57" width="10" height="36" rx="4" fill={segColor(legF)} opacity={segOpacity(legF)}/>
         </svg>
         <div style={{ display:"flex", justifyContent:"space-between", width:"100%" }}>
           <span style={{ fontFamily:"'Space Mono', monospace", fontSize:9, background:"rgba(255,59,48,0.12)", color:C.red, padding:"3px 8px", borderRadius:6 }}>● Recarregando</span>
