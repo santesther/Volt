@@ -37,7 +37,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(registry -> {
                     registry.requestMatchers("/auth/**").permitAll();
                     registry.requestMatchers(HttpMethod.POST, "/users").permitAll();
-                    registry.requestMatchers(HttpMethod.POST, "/training-plans").permitAll();
                     registry.anyRequest().authenticated();
                 })
                 .userDetailsService(customUserDetailsService)
