@@ -4,12 +4,22 @@ import { C } from "../utils/constants";
 import { useCount, SectionLabel, MuscleChip } from "../utils/components";
 
 export default function Dashboard({ onRegister, userId }) {
-  const v = useCount(78);
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const [suggestion, setSuggestion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
+
+  const calcOutputLevel = (muscleFatigue) => {
+    if (!muscleFatigue) return 0;
+    const values = Object.values(muscleFatigue);
+    if (values.length === 0) return 100;
+    const avgFatigue = values.reduce((a, b) => a + Math.min(100, b), 0) / values.length;
+    return Math.round(100 - avgFatigue);
+  };
+
+  const outputTarget = suggestion ? calcOutputLevel(suggestion.muscleFatigue) : 0;
+  const v = useCount(outputTarget);
 
    useEffect(() => {
      api.get(`/users/${userId}`)
