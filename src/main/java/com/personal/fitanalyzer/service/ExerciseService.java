@@ -76,6 +76,6 @@ public class ExerciseService {
     }
 
     private ExerciseResponseDTO toResponse(Exercise e) {
-        return new ExerciseResponseDTO(e.getId(), e.getName(), e.getMuscleGroup(), e.getEquipment());
+        return new ExerciseResponseDTO(e.getId(), e.getName(), e.getMuscleGroup(), e.getEquipment(), e.getNameEn());
     }
 }

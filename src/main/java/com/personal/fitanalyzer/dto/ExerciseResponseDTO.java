@@ -7,5 +7,6 @@ public record ExerciseResponseDTO(
         Long id,
         String name,
         MuscleGroups muscleGroup,
-        Equipment equipment
+        Equipment equipment,
+        String nameEn
 ) {}

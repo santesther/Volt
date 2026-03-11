@@ -9,5 +9,6 @@ public record ExerciseRequestDTO(
         String name,
         @NotNull(message = "O grupo muscular é obrigatório")
         Long muscleGroupId,
-        Equipment equipment
+        Equipment equipment,
+        String nameEn
 ) {}

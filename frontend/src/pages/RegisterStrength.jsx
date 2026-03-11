@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import api from "../api/api";
 import { C, EQUIPMENT_OPTIONS, EQUIPMENT_LABELS } from "../utils/constants";
 import { SectionLabel, NumericStepper, EffortSlider } from "../utils/components";
+import { useLang } from "../utils/langContext";
+import { muscleT } from "../utils/translations";
 
 function SetRow({ setNum, data, onChange, onRemove }) {
   return (
@@ -26,18 +28,18 @@ function SetRow({ setNum, data, onChange, onRemove }) {
   );
 }
 
-function ExerciseCard({ exercise, sets, onAddSet, onUpdateSet, onRemoveSet, onRemoveExercise }) {
+function ExerciseCard({ exercise, sets, onAddSet, onUpdateSet, onRemoveSet, onRemoveExercise, t }) {
   return (
     <div style={{ background:C.g2, borderRadius:14, padding:"14px 16px", marginBottom:10, border:"1px solid rgba(255,210,0,0.07)" }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-        <span style={{ fontFamily:"'DM Sans', sans-serif", fontWeight:600, fontSize:14, color:C.text }}>{exercise.name}</span>
+        <span style={{ fontFamily:"'DM Sans', sans-serif", fontWeight:600, fontSize:14, color:C.text }}>{exName(exercise)}</span>
         <button onClick={onRemoveExercise} style={{ background:"none", border:"none", cursor:"pointer", color:C.muted, fontSize:16 }}>×</button>
       </div>
       <div style={{ marginBottom:8 }}>
         <div style={{ display:"flex", gap:8, marginBottom:6 }}>
           <div style={{ fontFamily:"'Space Mono', monospace", fontSize:8, color:C.muted, width:20 }}>#</div>
-          <div style={{ fontFamily:"'Space Mono', monospace", fontSize:8, color:C.muted, flex:1 }}>CARGA</div>
-          <div style={{ fontFamily:"'Space Mono', monospace", fontSize:8, color:C.muted, flex:1 }}>REPS</div>
+          <div style={{ fontFamily:"'Space Mono', monospace", fontSize:8, color:C.muted, flex:1 }}>{t("weight_kg").toUpperCase()}</div>
+          <div style={{ fontFamily:"'Space Mono', monospace", fontSize:8, color:C.muted, flex:1 }}>{t("reps").toUpperCase()}</div>
           <div style={{ width:32 }} />
         </div>
         {sets.map((s, i) => (
@@ -51,12 +53,13 @@ function ExerciseCard({ exercise, sets, onAddSet, onUpdateSet, onRemoveSet, onRe
         width:"100%", background:"rgba(255,210,0,0.06)", border:"1px dashed rgba(255,210,0,0.2)",
         borderRadius:10, padding:"8px", cursor:"pointer",
         fontFamily:"'Space Mono', monospace", fontSize:9, color:C.yellow, letterSpacing:"0.15em",
-      }}>+ SÉRIE</button>
+      }}>+ {t("sets").toUpperCase()}</button>
     </div>
   );
 }
 
 export default function RegisterStrength({ suggestion, userId, onBack, onSave }) {
+  const { t, lang } = useLang();
   const today = new Date().toISOString().slice(0,16);
   const [date, setDate] = useState(today);
   const [durationMinutes, setDurationMinutes] = useState(60);
@@ -70,9 +73,11 @@ export default function RegisterStrength({ suggestion, userId, onBack, onSave })
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState(null);
   const [allMuscles, setAllMuscles] = useState([]);
+  const exName = (ex) => lang === "en" && ex.nameEn ? ex.nameEn : ex.name;
 
   const isFreestyle = !suggestion?.suggestedMuscles?.length;
-  const muscles = isFreestyle ? allMuscles : (suggestion?.suggestedMuscles || []);
+  const muscles = (isFreestyle ? allMuscles : (suggestion?.suggestedMuscles || []))
+    .filter(m => m.name !== "KNEES");
 
   useEffect(() => {
     if (isFreestyle) {
@@ -115,14 +120,17 @@ export default function RegisterStrength({ suggestion, userId, onBack, onSave })
           sets.push({ exerciseId: exercise.id, weightKg: parseFloat(s.weightKg), reps: parseInt(s.reps), order: order++ });
       });
     });
-    if (sets.length === 0) { setError("Adicione ao menos uma série antes de salvar."); return; }
+    if (sets.length === 0) {
+      setError(lang === "pt-BR" ? "Adicione ao menos uma série antes de salvar." : "Add at least one set before saving.");
+      return;
+    }
     try {
       setSaving(true);
       const res = await api.post("/strength-workouts", { userId, effort, date: date + ":00", durationMinutes, equipment, sets });
       setSaved(true);
       setTimeout(() => { setSaved(false); onSave(res.data.id); }, 1800);
     } catch (err) {
-      setError("Erro ao salvar treino. Tente novamente.");
+      setError(lang === "pt-BR" ? "Erro ao salvar treino. Tente novamente." : "Error saving workout. Please try again.");
       console.error(err);
     } finally {
       setSaving(false);
@@ -134,13 +142,13 @@ export default function RegisterStrength({ suggestion, userId, onBack, onSave })
       <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:24 }}>
         <button onClick={onBack} style={{ background:C.graphite, border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, width:40, height:40, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, color:C.text, flexShrink:0 }}>←</button>
         <div>
-          <SectionLabel>Registrar Treino</SectionLabel>
-          <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:26, letterSpacing:"-0.02em", lineHeight:1 }}>Musculação</div>
+          <SectionLabel>{t("register_workout")}</SectionLabel>
+          <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:26, letterSpacing:"-0.02em", lineHeight:1 }}>{t("register_strength")}</div>
         </div>
       </div>
 
       <div style={{ marginBottom:16 }}>
-        <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>Data e Hora</div>
+        <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>{t("date_time")}</div>
         <input type="datetime-local" value={date} onChange={e => setDate(e.target.value)}
           style={{ width:"100%", background:C.graphite, border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, padding:"12px 14px", color:C.text, fontSize:13, fontFamily:"'DM Sans', sans-serif", outline:"none", colorScheme:"dark" }}
         />
@@ -151,21 +159,25 @@ export default function RegisterStrength({ suggestion, userId, onBack, onSave })
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <span style={{ width:6, height:6, borderRadius:"50%", background:C.yellow, display:"inline-block" }} />
-              <span style={{ fontFamily:"'Space Mono', monospace", fontSize:10, color:C.yellow, letterSpacing:"0.15em" }}>{muscle.name}</span>
+              <span style={{ fontFamily:"'Space Mono', monospace", fontSize:10, color:C.yellow, letterSpacing:"0.15em" }}>{muscleT(muscle.name, lang)}</span>
             </div>
-            <button onClick={() => openPicker(muscle)} style={{ background:"rgba(255,210,0,0.08)", border:"1px solid rgba(255,210,0,0.2)", borderRadius:100, padding:"4px 12px", cursor:"pointer", fontFamily:"'Space Mono', monospace", fontSize:9, color:C.yellow, letterSpacing:"0.1em" }}>+ EXERCÍCIO</button>
+            <button onClick={() => openPicker(muscle)} style={{ background:"rgba(255,210,0,0.08)", border:"1px solid rgba(255,210,0,0.2)", borderRadius:100, padding:"4px 12px", cursor:"pointer", fontFamily:"'Space Mono', monospace", fontSize:9, color:C.yellow, letterSpacing:"0.1em" }}>
+              + {t("exercise").toUpperCase()}
+            </button>
           </div>
           {showPicker?.id === muscle.id && (
             <div style={{ background:C.graphite, borderRadius:14, padding:"12px", marginBottom:10, border:"1px solid rgba(255,210,0,0.1)" }}>
               {loadingExercises[muscle.id] ? (
-                <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.muted, textAlign:"center", padding:"12px 0" }}>Carregando...</div>
+                <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.muted, textAlign:"center", padding:"12px 0" }}>
+                  {lang === "pt-BR" ? "Carregando..." : "Loading..."}
+                </div>
               ) : (
                 <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                   {(exercisesByMuscle[muscle.id] || []).map(ex => {
                     const sel = !!selectedExercises.find(e => e.exercise.id === ex.id);
                     return (
                       <button key={ex.id} onClick={() => addExercise(ex)} style={{ background: sel ? "rgba(255,210,0,0.1)" : "rgba(255,255,255,0.03)", border:`1px solid ${sel ? C.yellow : "rgba(255,255,255,0.06)"}`, borderRadius:10, padding:"10px 14px", cursor:"pointer", textAlign:"left", fontFamily:"'DM Sans', sans-serif", fontSize:13, color: sel ? C.yellow : C.text }}>
-                        {ex.name} {sel && <span style={{ float:"right", color:C.yellow }}>✓</span>}
+                        {exName(ex)} {sel && <span style={{ float:"right", color:C.yellow }}>✓</span>}
                       </button>
                     );
                   })}
@@ -174,7 +186,7 @@ export default function RegisterStrength({ suggestion, userId, onBack, onSave })
             </div>
           )}
           {selectedExercises.filter(e => e.exercise.muscleGroup?.id === muscle.id).map(({ exercise, sets }) => (
-            <ExerciseCard key={exercise.id} exercise={exercise} sets={sets}
+            <ExerciseCard key={exercise.id} exercise={exercise} sets={sets} t={t}
               onAddSet={() => addSet(exercise.id)}
               onUpdateSet={(i, u) => updateSet(exercise.id, i, u)}
               onRemoveSet={(i) => removeSet(exercise.id, i)}
@@ -185,7 +197,7 @@ export default function RegisterStrength({ suggestion, userId, onBack, onSave })
       ))}
 
       <div style={{ marginBottom:16 }}>
-        <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>Equipamento</div>
+        <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>{t("equipment_type")}</div>
         <div style={{ display:"flex", gap:8 }}>
           {EQUIPMENT_OPTIONS.map(eq => (
             <button key={eq} onClick={() => setEquipment(eq)} style={{ flex:1, padding:"11px 6px", borderRadius:12, cursor:"pointer", background: equipment === eq ? "rgba(255,210,0,0.1)" : C.graphite, border:`1px solid ${equipment === eq ? C.yellow : "rgba(255,255,255,0.08)"}`, fontFamily:"'Space Mono', monospace", fontSize:8, letterSpacing:"0.1em", color: equipment === eq ? C.yellow : C.muted }}>
@@ -196,17 +208,19 @@ export default function RegisterStrength({ suggestion, userId, onBack, onSave })
       </div>
 
       <div style={{ display:"flex", gap:10, marginBottom:16 }}>
-        <NumericStepper label="Duração" value={durationMinutes} onChange={setDurationMinutes} min={10} max={180} unit="min" />
+        <NumericStepper label={t("duration")} value={durationMinutes} onChange={setDurationMinutes} min={10} max={180} unit="min" />
       </div>
 
       <div style={{ background:C.g2, borderRadius:16, padding:"16px", marginBottom:16, border:"1px solid rgba(255,255,255,0.05)" }}>
         <EffortSlider value={effort} onChange={setEffort} />
       </div>
 
-      {error && <div style={{ background:"rgba(255,59,48,0.08)", border:"1px solid rgba(255,59,48,0.25)", borderRadius:12, padding:"12px 14px", marginBottom:16, fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.red }}>{error}</div>}
+      {error && (
+        <div style={{ background:"rgba(255,59,48,0.08)", border:"1px solid rgba(255,59,48,0.25)", borderRadius:12, padding:"12px 14px", marginBottom:16, fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.red }}>{error}</div>
+      )}
 
       <button onClick={handleSave} disabled={saving} style={{ width:"100%", background: saved ? "rgba(255,210,0,0.15)" : saving ? "rgba(255,210,0,0.4)" : C.yellow, border: saved ? `1px solid ${C.yellow}` : "none", borderRadius:14, padding:"14px", cursor: saving ? "not-allowed" : "pointer", fontFamily:"'Space Mono', monospace", fontSize:11, fontWeight:700, letterSpacing:"0.2em", color: saved ? C.yellow : "#050505", transition:"all 0.3s", marginBottom:24 }}>
-        {saved ? "✓ TREINO REGISTRADO" : saving ? "SALVANDO..." : "SALVAR TREINO"}
+        {saved ? t("workout_saved") : saving ? t("saving") : t("save_workout")}
       </button>
     </div>
   );

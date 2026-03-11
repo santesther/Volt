@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import api from "../api/api";
-import { C, ZONE_OPTIONS, WEATHER_OPTIONS, WEATHER_LABELS, RUNTYPE_OPTIONS, RUNTYPE_LABELS } from "../utils/constants";
+import { C, ZONE_OPTIONS, WEATHER_OPTIONS, RUNTYPE_OPTIONS } from "../utils/constants";
 import { SectionLabel, NumericStepper, DurationStepper, EffortSlider } from "../utils/components";
+import { useLang } from "../utils/langContext";
+import { muscleT } from "../utils/translations";
 
-function PainfulMusclesModal({ workoutId, userId, onDone }) {
+function PainfulMusclesModal({ workoutId, userId, onDone, t, lang }) {
   const [muscleGroups, setMuscleGroups] = useState([]);
   const [selected, setSelected] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -33,11 +35,10 @@ function PainfulMusclesModal({ workoutId, userId, onDone }) {
   return (
     <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", zIndex:999, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
       <div style={{ background:"#111", borderRadius:"24px 24px 0 0", padding:"28px 24px 40px", width:"100%", maxWidth:480, border:"1px solid rgba(255,255,255,0.08)", borderBottom:"none" }}>
-        <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:20, color:C.text, marginBottom:6 }}>Algum músculo doeu?</div>
+        <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:20, color:C.text, marginBottom:6 }}>{t("painful_muscles_title")}</div>
         <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.muted, marginBottom:20, lineHeight:1.6 }}>
-          Selecione os músculos que ficaram doloridos/pesados durante ou após a corrida. Isso ajuda o motor de sugestões a evitá-los nos próximos treinos.
+          {t("painful_muscles_desc")}
         </div>
-
         <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:24 }}>
           {muscleGroups.map(m => {
             const active = selected.includes(m.id);
@@ -49,19 +50,18 @@ function PainfulMusclesModal({ workoutId, userId, onDone }) {
                 fontFamily:"'DM Sans', sans-serif", fontSize:13,
                 color: active ? C.red : C.muted, transition:"all 0.15s",
               }}>
-                {active ? "🔴 " : ""}{m.name}
+                {active ? "🔴 " : ""}{muscleT(m.name, lang)}
               </button>
             );
           })}
         </div>
-
         <button onClick={handleSave} disabled={saving} style={{
           width:"100%", background: saving ? "rgba(255,210,0,0.3)" : C.yellow,
           border:"none", borderRadius:14, padding:"14px",
           fontFamily:"'Space Mono', monospace", fontSize:11, fontWeight:700,
           letterSpacing:"0.2em", color:"#050505", cursor: saving ? "not-allowed" : "pointer",
         }}>
-          {saving ? "SALVANDO..." : selected.length > 0 ? "SALVAR E CONTINUAR" : "NENHUM — CONTINUAR"}
+          {saving ? t("saving") : selected.length > 0 ? t("save_and_continue") : t("none_continue")}
         </button>
       </div>
     </div>
@@ -69,6 +69,7 @@ function PainfulMusclesModal({ workoutId, userId, onDone }) {
 }
 
 export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
+  const { t, lang } = useLang();
   const today = new Date().toISOString().slice(0,16);
   const [form, setForm] = useState({
     effort: 5, date: today,
@@ -103,7 +104,7 @@ export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
       setSavedWorkoutId(res.data.id);
       setTimeout(() => setShowPainModal(true), 800);
     } catch (err) {
-      setError("Erro ao salvar corrida. Tente novamente.");
+      setError(lang === "pt-BR" ? "Erro ao salvar corrida. Tente novamente." : "Error saving run. Please try again.");
       console.error(err);
     } finally {
       setSaving(false);
@@ -122,42 +123,44 @@ export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
           workoutId={savedWorkoutId}
           userId={userId}
           onDone={handleModalDone}
+          t={t}
+          lang={lang}
         />
       )}
 
       <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:24 }}>
         <button onClick={onBack} style={{ background:C.graphite, border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, width:40, height:40, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, color:C.text, flexShrink:0 }}>←</button>
         <div>
-          <SectionLabel>Registrar Treino</SectionLabel>
-          <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:26, letterSpacing:"-0.02em", lineHeight:1 }}>Corrida</div>
+          <SectionLabel>{t("register_workout")}</SectionLabel>
+          <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:26, letterSpacing:"-0.02em", lineHeight:1 }}>{t("register_run")}</div>
         </div>
       </div>
 
       <div style={{ background:`linear-gradient(135deg, #1A1400, ${C.graphite})`, borderRadius:18, padding:"16px 20px", marginBottom:16, border:"1px solid rgba(255,210,0,0.1)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
         <div>
-          <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color:C.muted, letterSpacing:"0.2em", marginBottom:4 }}>PACE ESTIMADO</div>
+          <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color:C.muted, letterSpacing:"0.2em", marginBottom:4 }}>{t("estimated_pace")}</div>
           <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:36, color:C.yellow, lineHeight:1 }}>{pace}<span style={{ fontSize:13, color:C.muted, fontWeight:400 }}> min/km</span></div>
         </div>
         <div style={{ textAlign:"right" }}>
-          <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color:C.muted, letterSpacing:"0.15em", marginBottom:4 }}>ZONA</div>
+          <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color:C.muted, letterSpacing:"0.15em", marginBottom:4 }}>{t("zone").toUpperCase()}</div>
           <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:22, color:C.text }}>{form.zone}</div>
         </div>
       </div>
 
       <div style={{ marginBottom:16 }}>
-        <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>Data e Hora</div>
+        <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>{t("date_time")}</div>
         <input type="datetime-local" value={form.date} onChange={e => set("date")(e.target.value)}
           style={{ width:"100%", background:C.graphite, border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, padding:"12px 14px", color:C.text, fontSize:13, fontFamily:"'DM Sans', sans-serif", outline:"none", colorScheme:"dark" }}
         />
       </div>
 
       <div style={{ display:"flex", gap:10, marginBottom:16 }}>
-        <NumericStepper label="Distância" value={form.km} onChange={set("km")} min={1} max={100} unit="km" />
-        <DurationStepper label="Duração" value={form.duration} onChange={set("duration")} />
+        <NumericStepper label={t("distance")} value={form.km} onChange={set("km")} min={1} max={100} unit="km" />
+        <DurationStepper label={t("duration")} value={form.duration} onChange={set("duration")} />
       </div>
 
       <div style={{ marginBottom:16 }}>
-        <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>Zona de Esforço</div>
+        <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>{t("effort_zone")}</div>
         <div style={{ display:"flex", gap:8 }}>
           {ZONE_OPTIONS.map(z => (
             <button key={z} onClick={() => set("zone")(z)} style={{ flex:1, padding:"10px 4px", borderRadius:10, cursor:"pointer", background: form.zone === z ? "rgba(255,210,0,0.1)" : C.graphite, border:`1px solid ${form.zone === z ? C.yellow : "rgba(255,255,255,0.08)"}`, fontFamily:"'Space Mono', monospace", fontSize:10, fontWeight:700, color: form.zone === z ? C.yellow : C.muted }}>{z}</button>
@@ -166,24 +169,28 @@ export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
       </div>
 
       <div style={{ display:"flex", gap:10, marginBottom:16 }}>
-        <NumericStepper label="Subida (m)" value={form.uphill} onChange={set("uphill")} min={0} max={5000} unit="m" />
-        <NumericStepper label="Descida (m)" value={form.downhill} onChange={set("downhill")} min={0} max={5000} unit="m" />
+        <NumericStepper label={t("uphill_m")} value={form.uphill} onChange={set("uphill")} min={0} max={5000} unit="m" />
+        <NumericStepper label={t("downhill_m")} value={form.downhill} onChange={set("downhill")} min={0} max={5000} unit="m" />
       </div>
 
       <div style={{ marginBottom:16 }}>
-        <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>Clima</div>
+        <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>{t("climate")}</div>
         <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
           {WEATHER_OPTIONS.map(w => (
-            <button key={w} onClick={() => set("weather")(w)} style={{ padding:"8px 12px", borderRadius:10, cursor:"pointer", background: form.weather === w ? "rgba(255,210,0,0.1)" : C.graphite, border:`1px solid ${form.weather === w ? C.yellow : "rgba(255,255,255,0.08)"}`, fontFamily:"'DM Sans', sans-serif", fontSize:12, color: form.weather === w ? C.yellow : C.muted }}>{WEATHER_LABELS[w]}</button>
+            <button key={w} onClick={() => set("weather")(w)} style={{ padding:"8px 12px", borderRadius:10, cursor:"pointer", background: form.weather === w ? "rgba(255,210,0,0.1)" : C.graphite, border:`1px solid ${form.weather === w ? C.yellow : "rgba(255,255,255,0.08)"}`, fontFamily:"'DM Sans', sans-serif", fontSize:12, color: form.weather === w ? C.yellow : C.muted }}>
+              {t(`weather_${w.toLowerCase()}`)}
+            </button>
           ))}
         </div>
       </div>
 
       <div style={{ marginBottom:16 }}>
-        <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>Tipo de Corrida</div>
+        <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:8 }}>{t("run_type")}</div>
         <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
           {RUNTYPE_OPTIONS.map(r => (
-            <button key={r} onClick={() => set("runType")(r)} style={{ padding:"8px 12px", borderRadius:10, cursor:"pointer", background: form.runType === r ? "rgba(255,210,0,0.1)" : C.graphite, border:`1px solid ${form.runType === r ? C.yellow : "rgba(255,255,255,0.08)"}`, fontFamily:"'DM Sans', sans-serif", fontSize:12, color: form.runType === r ? C.yellow : C.muted }}>{RUNTYPE_LABELS[r]}</button>
+            <button key={r} onClick={() => set("runType")(r)} style={{ padding:"8px 12px", borderRadius:10, cursor:"pointer", background: form.runType === r ? "rgba(255,210,0,0.1)" : C.graphite, border:`1px solid ${form.runType === r ? C.yellow : "rgba(255,255,255,0.08)"}`, fontFamily:"'DM Sans', sans-serif", fontSize:12, color: form.runType === r ? C.yellow : C.muted }}>
+              {t(`run_${r.toLowerCase()}`)}
+            </button>
           ))}
         </div>
       </div>
@@ -192,10 +199,12 @@ export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
         <EffortSlider value={form.effort} onChange={set("effort")} />
       </div>
 
-      {error && <div style={{ background:"rgba(255,59,48,0.08)", border:"1px solid rgba(255,59,48,0.25)", borderRadius:12, padding:"12px 14px", marginBottom:16, fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.red }}>{error}</div>}
+      {error && (
+        <div style={{ background:"rgba(255,59,48,0.08)", border:"1px solid rgba(255,59,48,0.25)", borderRadius:12, padding:"12px 14px", marginBottom:16, fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.red }}>{error}</div>
+      )}
 
       <button onClick={handleSave} disabled={saving || saved} style={{ width:"100%", background: saved ? "rgba(255,210,0,0.15)" : saving ? "rgba(255,210,0,0.4)" : C.yellow, border: saved ? `1px solid ${C.yellow}` : "none", borderRadius:14, padding:"14px", cursor: saving || saved ? "not-allowed" : "pointer", fontFamily:"'Space Mono', monospace", fontSize:11, fontWeight:700, letterSpacing:"0.2em", color: saved ? C.yellow : "#050505", transition:"all 0.3s", marginBottom:24 }}>
-        {saved ? "✓ TREINO REGISTRADO" : saving ? "SALVANDO..." : "SALVAR TREINO"}
+        {saved ? t("workout_saved") : saving ? t("saving") : t("save_workout")}
       </button>
     </div>
   );

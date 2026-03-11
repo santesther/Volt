@@ -35,4 +35,7 @@ public class Exercise {
 
     @Enumerated(EnumType.ORDINAL)
     private Equipment equipment;
+
+    @Column(name = "name_en")
+    private String nameEn;
 }

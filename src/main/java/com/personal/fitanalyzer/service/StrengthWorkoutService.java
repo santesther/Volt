@@ -123,7 +123,8 @@ public class StrengthWorkoutService {
         List<WorkoutSetResponseDTO> setsDTO = w.getSets().stream()
                 .map(s -> new WorkoutSetResponseDTO(
                         s.getId(),
-                        new ExerciseResponseDTO(s.getExercise().getId(), s.getExercise().getName(), s.getExercise().getMuscleGroup(), s.getExercise().getEquipment()),
+                        new ExerciseResponseDTO(s.getExercise().getId(), s.getExercise().getName(), s.getExercise().getMuscleGroup(), s.getExercise().getEquipment(),
+                                s.getExercise().getNameEn()),
                         s.getReps(),
                         s.getWeightKg(),
                         s.getOrder()
