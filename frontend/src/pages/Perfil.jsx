@@ -44,6 +44,8 @@ function Section({ title, children }) {
 export default function Perfil({ userId, onOpenSettings, onLogout, onEditPlan }) {
   const { t, lang, changeLang } = useLang();
   const [photo, setPhoto] = useState(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
     name:"", email:"", height:"", weight:"", dateOfBirth:"", gender:"F", goal:"HYPERTROPHY"
@@ -72,17 +74,38 @@ export default function Perfil({ userId, onOpenSettings, onLogout, onEditPlan })
           goal: u.goal || "HYPERTROPHY",
         });
         setActiveGoal(u.goal || "HYPERTROPHY");
+        if (u.profilePictureBase64) {
+          setPhoto(`data:image/jpeg;base64,${u.profilePictureBase64}`);
+        }
       })
       .catch(err => console.error("Erro ao carregar perfil:", err))
       .finally(() => setLoading(false));
   }, [userId]);
 
-  const handlePhoto = (e) => {
+  const handlePhoto = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setPhoto(ev.target.result);
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => setPhoto(ev.target.result);
+    reader.readAsDataURL(file);
+
+    setUploadingPhoto(true);
+    setPhotoError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await api.patch(`/users/${userId}/profile-picture`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (res.data.profilePictureBase64) {
+        setPhoto(`data:image/jpeg;base64,${res.data.profilePictureBase64}`);
+      }
+    } catch (err) {
+      console.error("Erro ao salvar foto:", err);
+      setPhotoError(lang === "pt-BR" ? "Erro ao salvar foto." : "Error saving photo.");
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -162,17 +185,25 @@ export default function Perfil({ userId, onOpenSettings, onLogout, onEditPlan })
       <div style={{ display:"flex", justifyContent:"center", marginBottom:24 }}>
         <label style={{ cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:10 }}>
           <input type="file" accept="image/*" onChange={handlePhoto} style={{ display:"none" }} />
-          <div style={{ width:90, height:90, borderRadius:"50%", background: photo ? "transparent" : C.graphite, border:`2px solid ${photo ? C.yellow : "rgba(255,210,0,0.2)"}`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
-            {photo
-              ? <img src={photo} alt="perfil" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
-              : <span style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:32, color:C.yellow }}>{initials}</span>
-            }
+          <div style={{ position:"relative", width:90, height:90 }}>
+            <div style={{ width:90, height:90, borderRadius:"50%", background: photo ? "transparent" : C.graphite, border:`2px solid ${photo ? C.yellow : "rgba(255,210,0,0.2)"}`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
+              {photo
+                ? <img src={photo} alt="perfil" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                : <span style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:32, color:C.yellow }}>{initials}</span>
+              }
+            </div>
+            {uploadingPhoto && (
+              <div style={{ position:"absolute", inset:0, borderRadius:"50%", background:"rgba(5,5,5,0.7)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <div style={{ width:20, height:20, border:`2px solid ${C.yellow}`, borderTopColor:"transparent", borderRadius:"50%", animation:"spin 0.7s linear infinite" }} />
+              </div>
+            )}
           </div>
-          <span style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color:C.yellow, letterSpacing:"0.2em" }}>
-            {photo ? t("change_photo") : t("add_photo")}
+          <span style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color: photoError ? C.red : C.yellow, letterSpacing:"0.2em" }}>
+            {photoError ? photoError : uploadingPhoto ? (lang === "pt-BR" ? "SALVANDO..." : "SAVING...") : photo ? t("change_photo") : t("add_photo")}
           </span>
         </label>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       <Section title={t("personal_data")}>
         <Field label={t("name")} value={form.name} onChange={set("name")} />
@@ -207,7 +238,6 @@ export default function Perfil({ userId, onOpenSettings, onLogout, onEditPlan })
         <SaveButton onClick={saveGoal} saving={savingGoal} saved={savedGoal} error={errorGoal} t={t} />
       </Section>
 
-      {/* seletor de idioma */}
       <Section title={t("language")}>
         <div style={{ display:"flex", gap:8 }}>
           {["pt-BR", "en"].map(l => (

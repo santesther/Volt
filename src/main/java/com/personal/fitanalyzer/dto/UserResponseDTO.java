@@ -13,5 +13,6 @@ public record UserResponseDTO(
         LocalDate dateOfBirth,
         Integer age,
         String gender,
-        Goal goal
+        Goal goal,
+        String profilePictureBase64
 ) {}
