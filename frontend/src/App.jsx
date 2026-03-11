@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import VoltApp from "./pages/VoltApp";
+import api from "./api/api";
+import Login            from "./pages/Login";
+import Register         from "./pages/Register";
+import VoltApp          from "./pages/VoltApp";
 import TrainingPlanSetup from "./pages/TrainingPlanSetup";
+
+function AppShell({ children }) {
+  return <div className="volt-app-root">{children}</div>;
+}
 
 export default function App() {
   const [userId, setUserId] = useState(null);
@@ -14,20 +19,20 @@ export default function App() {
     if (savedUserId) setUserId(Number(savedUserId));
   }, []);
 
- const handleLogin = async (id, isNewUser = false) => {
-   setUserId(id);
-   setScreen("login");
-   if (isNewUser) {
-     setNeedsPlan(true);
-     return;
-   }
-   try {
-     await api.get(`/training-plans/user/${id}`);
-     setNeedsPlan(false);
-   } catch {
-     setNeedsPlan(false);
-   }
- };
+  const handleLogin = async (id, isNewUser = false) => {
+    setUserId(id);
+    setScreen("login");
+    if (isNewUser) {
+      setNeedsPlan(true);
+      return;
+    }
+    try {
+      await api.get(`/training-plans/user/${id}`);
+      setNeedsPlan(false);
+    } catch {
+      setNeedsPlan(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -36,8 +41,14 @@ export default function App() {
     setScreen("login");
   };
 
-  if (screen === "register") return <Register onLogin={handleLogin} onBack={() => setScreen("login")} />;
-  if (userId && needsPlan) return <TrainingPlanSetup userId={userId} onDone={() => setNeedsPlan(false)} onSkip={() => setNeedsPlan(false)} />;
-  if (userId) return <VoltApp userId={userId} onLogout={handleLogout} />;
-  return <Login onLogin={handleLogin} onRegister={() => setScreen("register")} />;
+  if (screen === "register")
+    return <AppShell><Register onLogin={handleLogin} onBack={() => setScreen("login")} /></AppShell>;
+
+  if (userId && needsPlan)
+    return <AppShell><TrainingPlanSetup userId={userId} onDone={() => setNeedsPlan(false)} onSkip={() => setNeedsPlan(false)} /></AppShell>;
+
+  if (userId)
+    return <VoltApp userId={userId} onLogout={handleLogout} />;
+
+  return <AppShell><Login onLogin={handleLogin} onRegister={() => setScreen("register")} /></AppShell>;
 }

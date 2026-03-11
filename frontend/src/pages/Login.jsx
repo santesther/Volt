@@ -34,7 +34,6 @@ export default function Login({ onLogin, onRegister }) {
     <div style={{ background: C.bg, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 28px", fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');`}</style>
 
-      {/* seletor de idioma */}
       <div style={{ position:"absolute", top:24, right:24, display:"flex", gap:8 }}>
         {["pt-BR", "en"].map(l => (
           <button key={l} onClick={() => changeLang(l)} style={{
