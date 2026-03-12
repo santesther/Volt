@@ -7,12 +7,62 @@ import { goalT } from "../utils/translations";
 
 const GOALS = ["HYPERTROPHY","FAT_LOSS","STRENGTH","ENDURANCE","FITNESS","REHABILITATION"];
 
-function Field({ label, value, onChange, type="text", placeholder="" }) {
+function maxBirthDate() {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 15);
+  return d.toISOString().split("T")[0];
+}
+
+function applyHeightMask(raw) {
+  const digits = raw.replace(/\D/g, "").slice(0, 3);
+  if (digits.length === 0) return "";
+  if (digits.length === 1) return digits;
+  if (digits.length === 2) return digits[0] + "." + digits[1];
+  return digits[0] + "." + digits.slice(1);
+}
+
+function applyWeightMask(raw) {
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return digits.slice(0, -1) + "." + digits.slice(-1);
+}
+
+function formatHeight(val) {
+  if (!val) return "";
+  const n = parseFloat(val);
+  if (isNaN(n)) return val.toString();
+  return n.toFixed(2);
+}
+
+function formatWeight(val) {
+  if (!val) return "";
+  const n = parseFloat(val);
+  if (isNaN(n)) return val.toString();
+  return n % 1 === 0 ? n.toString() : n.toString();
+}
+
+function Field({ label, value, onChange, type="text", placeholder="", max="" }) {
   return (
     <div style={{ marginBottom:14 }}>
       <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:6 }}>{label}</div>
-      <input type={type} value={value} placeholder={placeholder} onChange={e => onChange(e.target.value)}
+      <input type={type} value={value} placeholder={placeholder} max={max || undefined}
+        onChange={e => onChange(e.target.value)}
         style={{ width:"100%", background:C.graphite, border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, padding:"12px 14px", color:C.text, fontSize:14, fontFamily:"'DM Sans', sans-serif", outline:"none", transition:"border-color 0.2s", colorScheme:"dark" }}
+        onFocus={e => e.target.style.borderColor = "rgba(255,210,0,0.4)"}
+        onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.08)"}
+      />
+    </div>
+  );
+}
+
+function MaskedField({ label, value, onChange, placeholder, maskFn }) {
+  return (
+    <div style={{ marginBottom:14 }}>
+      <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:6 }}>{label}</div>
+      <input
+        type="text" inputMode="numeric" value={value} placeholder={placeholder}
+        onChange={e => onChange(maskFn(e.target.value))}
+        style={{ width:"100%", background:C.graphite, border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, padding:"12px 14px", color:C.text, fontSize:14, fontFamily:"'DM Sans', sans-serif", outline:"none", transition:"border-color 0.2s" }}
         onFocus={e => e.target.style.borderColor = "rgba(255,210,0,0.4)"}
         onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.08)"}
       />
@@ -54,6 +104,7 @@ export default function Perfil({ userId, onOpenSettings, onLogout, onEditPlan })
   const [savingInfo, setSavingInfo] = useState(false);
   const [savedInfo, setSavedInfo] = useState(false);
   const [errorInfo, setErrorInfo] = useState(false);
+  const [infoErrorMsg, setInfoErrorMsg] = useState(null);
   const [savingGoal, setSavingGoal] = useState(false);
   const [savedGoal, setSavedGoal] = useState(false);
   const [errorGoal, setErrorGoal] = useState(false);
@@ -67,8 +118,8 @@ export default function Perfil({ userId, onOpenSettings, onLogout, onEditPlan })
         setForm({
           name: u.name || "",
           email: u.email || "",
-          height: u.height?.toString() || "",
-          weight: u.weight?.toString() || "",
+          height: u.height ? formatHeight(u.height) : "",
+          weight: u.weight ? formatWeight(u.weight) : "",
           dateOfBirth: u.dateOfBirth || "",
           gender: u.gender || "F",
           goal: u.goal || "HYPERTROPHY",
@@ -85,11 +136,9 @@ export default function Perfil({ userId, onOpenSettings, onLogout, onEditPlan })
   const handlePhoto = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (ev) => setPhoto(ev.target.result);
     reader.readAsDataURL(file);
-
     setUploadingPhoto(true);
     setPhotoError(null);
     try {
@@ -110,6 +159,13 @@ export default function Perfil({ userId, onOpenSettings, onLogout, onEditPlan })
   };
 
   const saveInfo = async () => {
+    setInfoErrorMsg(null);
+    if (form.dateOfBirth && form.dateOfBirth > maxBirthDate()) {
+      setInfoErrorMsg(lang === "pt-BR" ? "É necessário ter pelo menos 15 anos." : "You must be at least 15 years old.");
+      setErrorInfo(true);
+      setTimeout(() => { setErrorInfo(false); setInfoErrorMsg(null); }, 3000);
+      return;
+    }
     setErrorInfo(false);
     setSavingInfo(true);
     try {
@@ -121,7 +177,8 @@ export default function Perfil({ userId, onOpenSettings, onLogout, onEditPlan })
       });
       setForm({
         name: res.data.name || "", email: res.data.email || "",
-        height: res.data.height?.toString() || "", weight: res.data.weight?.toString() || "",
+        height: res.data.height ? formatHeight(res.data.height) : "",
+        weight: res.data.weight ? formatWeight(res.data.weight) : "",
         dateOfBirth: res.data.dateOfBirth || "", gender: res.data.gender || "F",
         goal: res.data.goal || "HYPERTROPHY",
       });
@@ -209,10 +266,22 @@ export default function Perfil({ userId, onOpenSettings, onLogout, onEditPlan })
         <Field label={t("name")} value={form.name} onChange={set("name")} />
         <Field label={t("email")} value={form.email} onChange={set("email")} type="email" />
         <div style={{ display:"flex", gap:10 }}>
-          <div style={{ flex:1 }}><Field label={t("height")} value={form.height} onChange={set("height")} placeholder="1.70" /></div>
-          <div style={{ flex:1 }}><Field label={t("weight")} value={form.weight} onChange={set("weight")} placeholder="70" /></div>
+          <div style={{ flex:1 }}>
+            <MaskedField label={t("height")} value={form.height} onChange={set("height")} placeholder="1.70" maskFn={applyHeightMask} />
+          </div>
+          <div style={{ flex:1 }}>
+            <MaskedField label={t("weight")} value={form.weight} onChange={set("weight")} placeholder="70.0" maskFn={applyWeightMask} />
+          </div>
         </div>
-        <Field label={t("birth_date")} value={form.dateOfBirth} onChange={set("dateOfBirth")} type="date" />
+        <Field label={t("birth_date")} value={form.dateOfBirth} onChange={set("dateOfBirth")} type="date" max={maxBirthDate()} />
+        <div style={{ fontFamily:"'Space Mono', monospace", fontSize:8, color:C.muted, marginTop:-8, marginBottom:14, letterSpacing:"0.1em" }}>
+          {lang === "pt-BR" ? "* Necessário ter 15 anos ou mais" : "* Must be 15 years or older"}
+        </div>
+        {infoErrorMsg && (
+          <div style={{ background:"rgba(255,59,48,0.1)", border:"1px solid rgba(255,59,48,0.3)", borderRadius:10, padding:"10px 14px", marginBottom:12, fontSize:12, color:C.red, fontFamily:"'DM Sans', sans-serif" }}>
+            {infoErrorMsg}
+          </div>
+        )}
         <div style={{ marginBottom:14 }}>
           <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted, textTransform:"uppercase", marginBottom:6 }}>{t("gender")}</div>
           <div style={{ display:"flex", gap:8 }}>

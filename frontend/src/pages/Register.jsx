@@ -10,12 +10,69 @@ const C = {
 
 const GOALS = ["HYPERTROPHY","FAT_LOSS","STRENGTH","ENDURANCE","FITNESS","REHABILITATION"];
 
-function Field({ label, value, onChange, type="text", placeholder="" }) {
+function maxBirthDate() {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 15);
+  return d.toISOString().split("T")[0];
+}
+
+function applyHeightMask(raw) {
+  const digits = raw.replace(/\D/g, "").slice(0, 3);
+  if (digits.length === 0) return "";
+  if (digits.length === 1) return digits;
+  if (digits.length === 2) return digits[0] + "." + digits[1];
+  return digits[0] + "." + digits.slice(1);
+}
+
+function applyWeightMask(raw) {
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return digits.slice(0, -1) + "." + digits.slice(-1);
+}
+
+function Field({ label, value, onChange, type="text", placeholder="", max="" }) {
   return (
     <div style={{ marginBottom:14 }}>
       <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color:C.muted, letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:8 }}>{label}</div>
-      <input type={type} value={value} placeholder={placeholder} onChange={e => onChange(e.target.value)}
+      <input type={type} value={value} placeholder={placeholder} max={max || undefined}
+        onChange={e => onChange(e.target.value)}
         style={{ width:"100%", background:C.graphite, border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, padding:"14px 16px", color:C.text, fontSize:14, outline:"none", boxSizing:"border-box", fontFamily:"'DM Sans', sans-serif", colorScheme:"dark" }}
+        onFocus={e => e.target.style.borderColor = "rgba(255,210,0,0.4)"}
+        onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.08)"}
+      />
+    </div>
+  );
+}
+
+function HeightField({ label, value, onChange, placeholder }) {
+  const handleChange = (e) => {
+    onChange(applyHeightMask(e.target.value));
+  };
+  return (
+    <div style={{ marginBottom:14 }}>
+      <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color:C.muted, letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:8 }}>{label}</div>
+      <input
+        type="text" inputMode="numeric" value={value} placeholder={placeholder}
+        onChange={handleChange}
+        style={{ width:"100%", background:C.graphite, border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, padding:"14px 16px", color:C.text, fontSize:14, outline:"none", boxSizing:"border-box", fontFamily:"'DM Sans', sans-serif" }}
+        onFocus={e => e.target.style.borderColor = "rgba(255,210,0,0.4)"}
+        onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.08)"}
+      />
+    </div>
+  );
+}
+
+function WeightField({ label, value, onChange, placeholder }) {
+  const handleChange = (e) => {
+    onChange(applyWeightMask(e.target.value));
+  };
+  return (
+    <div style={{ marginBottom:14 }}>
+      <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color:C.muted, letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:8 }}>{label}</div>
+      <input
+        type="text" inputMode="numeric" value={value} placeholder={placeholder}
+        onChange={handleChange}
+        style={{ width:"100%", background:C.graphite, border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, padding:"14px 16px", color:C.text, fontSize:14, outline:"none", boxSizing:"border-box", fontFamily:"'DM Sans', sans-serif" }}
         onFocus={e => e.target.style.borderColor = "rgba(255,210,0,0.4)"}
         onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.08)"}
       />
@@ -45,9 +102,12 @@ export default function Register({ onLogin, onBack }) {
       if (form.password !== form.password_confirmation) return setError(lang === "pt-BR" ? "As senhas não coincidem." : "Passwords do not match.");
     }
     if (step === 1) {
-      if (!form.height || isNaN(parseFloat(form.height))) return setError(lang === "pt-BR" ? "Informe uma altura válida." : "Enter a valid height.");
-      if (!form.weight || isNaN(parseFloat(form.weight))) return setError(lang === "pt-BR" ? "Informe um peso válido." : "Enter a valid weight.");
+      const h = parseFloat(form.height);
+      if (!form.height || isNaN(h) || h < 0.5 || h > 2.5) return setError(lang === "pt-BR" ? "Informe uma altura válida (ex: 1.70)." : "Enter a valid height (e.g. 1.70).");
+      const w = parseFloat(form.weight);
+      if (!form.weight || isNaN(w) || w < 20 || w > 300) return setError(lang === "pt-BR" ? "Informe um peso válido." : "Enter a valid weight.");
       if (!form.dateOfBirth) return setError(lang === "pt-BR" ? "Informe sua data de nascimento." : "Enter your date of birth.");
+      if (form.dateOfBirth > maxBirthDate()) return setError(lang === "pt-BR" ? "É necessário ter pelo menos 15 anos para se cadastrar." : "You must be at least 15 years old to register.");
     }
     setStep(s => s + 1);
   };
@@ -108,10 +168,17 @@ export default function Register({ onLogin, onBack }) {
       {step === 1 && (
         <div style={{ flex:1 }}>
           <div style={{ display:"flex", gap:10 }}>
-            <div style={{ flex:1 }}><Field label={t("height")} value={form.height} onChange={set("height")} placeholder="1.70" /></div>
-            <div style={{ flex:1 }}><Field label={t("weight")} value={form.weight} onChange={set("weight")} placeholder="70" /></div>
+            <div style={{ flex:1 }}>
+              <HeightField label={t("height")} value={form.height} onChange={set("height")} placeholder="1.70" />
+            </div>
+            <div style={{ flex:1 }}>
+              <WeightField label={t("weight")} value={form.weight} onChange={set("weight")} placeholder="70.0" />
+            </div>
           </div>
-          <Field label={t("birth_date")} value={form.dateOfBirth} onChange={set("dateOfBirth")} type="date" />
+          <Field label={t("birth_date")} value={form.dateOfBirth} onChange={set("dateOfBirth")} type="date" max={maxBirthDate()} />
+          <div style={{ fontFamily:"'Space Mono', monospace", fontSize:8, color:C.muted, marginTop:-8, marginBottom:14, letterSpacing:"0.1em" }}>
+            {lang === "pt-BR" ? "* Necessário ter 15 anos ou mais" : "* Must be 15 years or older"}
+          </div>
           <div style={{ marginBottom:14 }}>
             <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color:C.muted, letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:8 }}>{t("gender")}</div>
             <div style={{ display:"flex", gap:8 }}>
