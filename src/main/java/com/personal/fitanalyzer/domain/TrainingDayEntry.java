@@ -1,7 +1,10 @@
 package com.personal.fitanalyzer.domain;
 
+import com.personal.fitanalyzer.domain.enums.RunType;
 import com.personal.fitanalyzer.domain.enums.WorkoutType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,7 +23,14 @@ public class TrainingDayEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private WorkoutType workoutType;
+
+    private Double targetKm;
+
+    @Enumerated(EnumType.STRING)
+    private RunType runType;
+
     @ManyToMany
     @JoinTable(
             name = "training_day_entry_muscle_groups",
@@ -36,35 +46,21 @@ public class TrainingDayEntry {
     public TrainingDayEntry(){
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public WorkoutType getWorkoutType() { return workoutType; }
+    public void setWorkoutType(WorkoutType workoutType) { this.workoutType = workoutType; }
 
-    public WorkoutType getWorkoutType() {
-        return workoutType;
-    }
+    public Double getTargetKm() { return targetKm; }
+    public void setTargetKm(Double targetKm) { this.targetKm = targetKm; }
 
-    public void setWorkoutType(WorkoutType workoutType) {
-        this.workoutType = workoutType;
-    }
+    public RunType getRunType() { return runType; }
+    public void setRunType(RunType runType) { this.runType = runType; }
 
-    public List<MuscleGroups> getMuscleGroups() {
-        return muscleGroups;
-    }
+    public List<MuscleGroups> getMuscleGroups() { return muscleGroups; }
+    public void setMuscleGroups(List<MuscleGroups> muscleGroups) { this.muscleGroups = muscleGroups; }
 
-    public void setMuscleGroups(List<MuscleGroups> muscleGroups) {
-        this.muscleGroups = muscleGroups;
-    }
-
-    public TrainingDay getTrainingDay() {
-        return trainingDay;
-    }
-
-    public void setTrainingDay(TrainingDay trainingDay) {
-        this.trainingDay = trainingDay;
-    }
+    public TrainingDay getTrainingDay() { return trainingDay; }
+    public void setTrainingDay(TrainingDay trainingDay) { this.trainingDay = trainingDay; }
 }

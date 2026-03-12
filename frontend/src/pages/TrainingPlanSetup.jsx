@@ -18,6 +18,14 @@ const DAYS_CONFIG = [
   { key: "SUNDAY",    ptLabel: "DOM", enLabel: "SUN" },
 ];
 
+const RUN_TYPES = [
+  { key: "EASY",      ptLabel: "Fácil",       enLabel: "Easy"      },
+  { key: "TEMPO",     ptLabel: "Tempo",        enLabel: "Tempo"     },
+  { key: "LONG_RUN",  ptLabel: "Longo",        enLabel: "Long Run"  },
+  { key: "INTERVAL",  ptLabel: "Intervalado",  enLabel: "Interval"  },
+  { key: "RECOVERY",  ptLabel: "Recuperação",  enLabel: "Recovery"  },
+];
+
 function SectionLabel({ children }) {
   return (
     <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.25em", color:C.muted, textTransform:"uppercase", marginBottom:10 }}>
@@ -57,20 +65,32 @@ function StepWorkouts({ selectedDays, dayConfigs, onUpdateDay, muscleGroups, t, 
   const [openDay, setOpenDay] = useState(selectedDays[0] || null);
 
   const toggleType = (dayKey, type) => {
-    const current = dayConfigs[dayKey] || { types: [], muscles: [] };
+    const current = dayConfigs[dayKey] || { types: [], muscles: [], targetKm: "", runType: "" };
     const types = current.types.includes(type)
       ? current.types.filter(tp => tp !== type)
       : [...current.types, type];
     const muscles = types.includes("STRENGTH") ? current.muscles : [];
-    onUpdateDay(dayKey, { ...current, types, muscles });
+    const targetKm = types.includes("RUN") ? current.targetKm : "";
+    const runType = types.includes("RUN") ? current.runType : "";
+    onUpdateDay(dayKey, { ...current, types, muscles, targetKm, runType });
   };
 
   const toggleMuscle = (dayKey, muscleId) => {
-    const current = dayConfigs[dayKey] || { types: [], muscles: [] };
+    const current = dayConfigs[dayKey] || { types: [], muscles: [], targetKm: "", runType: "" };
     const muscles = current.muscles.includes(muscleId)
       ? current.muscles.filter(id => id !== muscleId)
       : [...current.muscles, muscleId];
     onUpdateDay(dayKey, { ...current, muscles });
+  };
+
+  const setTargetKm = (dayKey, value) => {
+    const current = dayConfigs[dayKey] || { types: [], muscles: [], targetKm: "", runType: "" };
+    onUpdateDay(dayKey, { ...current, targetKm: value });
+  };
+
+  const setRunType = (dayKey, value) => {
+    const current = dayConfigs[dayKey] || { types: [], muscles: [], targetKm: "", runType: "" };
+    onUpdateDay(dayKey, { ...current, runType: value });
   };
 
   const dayLabel = (key) => {
@@ -90,7 +110,7 @@ function StepWorkouts({ selectedDays, dayConfigs, onUpdateDay, muscleGroups, t, 
         {t("configure_workouts")}
       </div>
       {selectedDays.map(dayKey => {
-        const config = dayConfigs[dayKey] || { types: [], muscles: [] };
+        const config = dayConfigs[dayKey] || { types: [], muscles: [], targetKm: "", runType: "" };
         const isOpen = openDay === dayKey;
 
         return (
@@ -132,6 +152,55 @@ function StepWorkouts({ selectedDays, dayConfigs, onUpdateDay, muscleGroups, t, 
                     );
                   })}
                 </div>
+
+                {config.types.includes("RUN") && (
+                  <>
+                    <SectionLabel>{lang === "pt-BR" ? "Detalhes da corrida" : "Run Details"}</SectionLabel>
+
+                    <div style={{ marginBottom:12 }}>
+                      <div style={{ fontFamily:"'Space Mono', monospace", fontSize:8, letterSpacing:"0.2em", color:C.muted, marginBottom:6 }}>
+                        {lang === "pt-BR" ? "QUILOMETRAGEM ALVO (KM)" : "TARGET DISTANCE (KM)"}
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        placeholder={lang === "pt-BR" ? "Ex: 10" : "E.g. 10"}
+                        value={config.targetKm}
+                        onChange={e => setTargetKm(dayKey, e.target.value)}
+                        style={{
+                          width:"100%", boxSizing:"border-box",
+                          background:C.graphite, border:"1px solid rgba(255,255,255,0.08)",
+                          borderRadius:10, padding:"10px 14px",
+                          fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.text,
+                          outline:"none",
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ marginBottom:14 }}>
+                      <div style={{ fontFamily:"'Space Mono', monospace", fontSize:8, letterSpacing:"0.2em", color:C.muted, marginBottom:6 }}>
+                        {lang === "pt-BR" ? "TIPO DE CORRIDA" : "RUN TYPE"}
+                      </div>
+                      <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
+                        {RUN_TYPES.map(rt => {
+                          const active = config.runType === rt.key;
+                          return (
+                            <button key={rt.key} onClick={() => setRunType(dayKey, rt.key)} style={{
+                              padding:"6px 12px", borderRadius:100, cursor:"pointer",
+                              background: active ? "rgba(255,210,0,0.1)" : "rgba(255,255,255,0.04)",
+                              border:`1px solid ${active ? C.yellow : "rgba(255,255,255,0.08)"}`,
+                              fontFamily:"'DM Sans', sans-serif", fontSize:12,
+                              color: active ? C.yellow : C.muted, transition:"all 0.15s",
+                            }}>
+                              {lang === "en" ? rt.enLabel : rt.ptLabel}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {config.types.includes("STRENGTH") && (
                   <>
@@ -177,13 +246,18 @@ function StepReview({ selectedDays, dayConfigs, muscleGroups, t, lang }) {
     return `😴 ${lang === "pt-BR" ? "DESCANSO" : "REST"}`;
   };
 
+  const runTypeLabel = (key) => {
+    const rt = RUN_TYPES.find(r => r.key === key);
+    return rt ? (lang === "en" ? rt.enLabel : rt.ptLabel) : key;
+  };
+
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
       <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.muted, marginBottom:8, lineHeight:1.6 }}>
         {t("review_plan")}
       </div>
       {selectedDays.map(dayKey => {
-        const config = dayConfigs[dayKey] || { types: [], muscles: [] };
+        const config = dayConfigs[dayKey] || { types: [], muscles: [], targetKm: "", runType: "" };
         const muscleNames = config.muscles
           .map(id => muscleGroups.find(m => m.id === id))
           .filter(Boolean)
@@ -204,6 +278,20 @@ function StepReview({ selectedDays, dayConfigs, muscleGroups, t, lang }) {
             </div>
             {muscleNames && (
               <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:12, color:C.muted, marginTop:6 }}>{muscleNames}</div>
+            )}
+            {config.types.includes("RUN") && (config.targetKm || config.runType) && (
+              <div style={{ display:"flex", gap:10, marginTop:6, flexWrap:"wrap" }}>
+                {config.targetKm && (
+                  <span style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color:"rgba(255,210,0,0.6)" }}>
+                    🏃 {config.targetKm} km
+                  </span>
+                )}
+                {config.runType && (
+                  <span style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color:"rgba(255,210,0,0.6)" }}>
+                    · {runTypeLabel(config.runType)}
+                  </span>
+                )}
+              </div>
             )}
           </div>
         );
@@ -241,7 +329,13 @@ export default function TrainingPlanSetup({ userId, onDone, onSkip }) {
           const muscles = day.entries
             .filter(e => e.workoutType === "STRENGTH")
             .flatMap(e => e.muscleGroups.map(m => m.id));
-          configs[day.dayOfWeek] = { types, muscles };
+          const runEntry = day.entries.find(e => e.workoutType === "RUN");
+          configs[day.dayOfWeek] = {
+            types,
+            muscles,
+            targetKm: runEntry?.targetKm ?? "",
+            runType: runEntry?.runType ?? "",
+          };
         });
         const ORDER = ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY","SUNDAY"];
         days.sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
@@ -286,6 +380,18 @@ export default function TrainingPlanSetup({ userId, onDone, onSkip }) {
             : `Select at least one muscle group for ${dayLabel(dayKey)}.`);
           return false;
         }
+        if (config.types.includes("RUN") && !config.runType) {
+          setError(lang === "pt-BR"
+            ? `Selecione o tipo de corrida para ${dayLabel(dayKey)}.`
+            : `Select the run type for ${dayLabel(dayKey)}.`);
+          return false;
+        }
+        if (config.types.includes("RUN") && (!config.targetKm || Number(config.targetKm) <= 0)) {
+          setError(lang === "pt-BR"
+            ? `Informe a quilometragem alvo para ${dayLabel(dayKey)}.`
+            : `Enter the target distance for ${dayLabel(dayKey)}.`);
+          return false;
+        }
       }
     }
     setError(null);
@@ -302,10 +408,12 @@ export default function TrainingPlanSetup({ userId, onDone, onSkip }) {
     setError(null);
     try {
       const days = selectedDays.map(dayKey => {
-        const config = dayConfigs[dayKey] || { types: [], muscles: [] };
+        const config = dayConfigs[dayKey] || { types: [], muscles: [], targetKm: "", runType: "" };
         const entries = config.types.map(type => ({
           workoutType: type,
           muscleGroupIds: type === "STRENGTH" ? (config.muscles || []) : [],
+          targetKm: type === "RUN" ? (config.targetKm ? Number(config.targetKm) : null) : null,
+          runType: type === "RUN" ? (config.runType || null) : null,
         }));
         return { dayOfWeek: dayKey, entries };
       });

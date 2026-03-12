@@ -41,7 +41,6 @@ public class TrainingPlanService {
                 .orElse(new TrainingPlan());
 
         plan.setUser(user);
-
         plan.getTrainingDays().clear();
 
         List<TrainingDay> days = request.days().stream().map(dayDTO -> {
@@ -62,6 +61,11 @@ public class TrainingPlanService {
                 TrainingDayEntry entry = new TrainingDayEntry();
                 entry.setWorkoutType(entryDTO.workoutType());
                 entry.setTrainingDay(day);
+
+                if (entryDTO.workoutType() == WorkoutType.RUN) {
+                    entry.setTargetKm(entryDTO.targetKm());
+                    entry.setRunType(entryDTO.runType());
+                }
 
                 if (entryDTO.muscleGroupIds() != null && !entryDTO.muscleGroupIds().isEmpty()) {
                     List<MuscleGroups> muscles = entryDTO.muscleGroupIds().stream()
@@ -105,7 +109,9 @@ public class TrainingPlanService {
                                 .map(entry -> new TrainingDayEntryResponseDTO(
                                         entry.getId(),
                                         entry.getWorkoutType(),
-                                        entry.getMuscleGroups()
+                                        entry.getMuscleGroups(),
+                                        entry.getTargetKm(),
+                                        entry.getRunType()
                                 ))
                                 .collect(Collectors.toList())
                 ))
