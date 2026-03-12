@@ -4,6 +4,95 @@ import { C } from "../utils/constants";
 import { SectionLabel } from "../utils/components";
 import { useLang } from "../utils/langContext";
 import { muscleT } from "../utils/translations";
+import PainModal from "./PainModal";
+
+function painColor(value) {
+  if (value === 0) return C.muted;
+  if (value <= 30) return "#FFD200";
+  if (value <= 60) return "#FF8C00";
+  return "#FF3B30";
+}
+
+function PainSection({ workoutId, lang, onPainUpdated }) {
+  const [painEntries, setPainEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+
+  const loadPain = () => {
+    setLoading(true);
+    api.get(`/workouts/${workoutId}/pain`)
+      .then(res => setPainEntries(res.data || []))
+      .catch(() => setPainEntries([]))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { loadPain(); }, [workoutId]);
+
+  const handleModalDone = () => {
+    setShowModal(false);
+    loadPain();
+    onPainUpdated?.();
+  };
+
+  if (loading) return null;
+
+  return (
+    <>
+      {showModal && (
+        <PainModal
+          workoutId={workoutId}
+          onDone={handleModalDone}
+          onSkip={() => setShowModal(false)}
+        />
+      )}
+
+      <div style={{ marginTop:16, background:C.g2, borderRadius:14, padding:"14px 16px", border:"1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: painEntries.length > 0 ? 12 : 0 }}>
+          <div style={{ fontFamily:"'Space Mono', monospace", fontSize:9, letterSpacing:"0.2em", color:C.muted }}>
+            {lang === "pt-BR" ? "DOR PÓS-TREINO" : "POST-WORKOUT PAIN"}
+          </div>
+          <button onClick={() => setShowModal(true)} style={{
+            background:"rgba(255,210,0,0.08)", border:"1px solid rgba(255,210,0,0.2)",
+            borderRadius:100, padding:"4px 12px", cursor:"pointer",
+            fontFamily:"'Space Mono', monospace", fontSize:9, color:C.yellow, letterSpacing:"0.1em",
+          }}>
+            {painEntries.length > 0
+              ? (lang === "pt-BR" ? "EDITAR" : "EDIT")
+              : (lang === "pt-BR" ? "+ REGISTRAR" : "+ REGISTER")}
+          </button>
+        </div>
+
+        {painEntries.length === 0 ? (
+          <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:12, color:C.muted, marginTop:8 }}>
+            {lang === "pt-BR" ? "Nenhuma dor registrada." : "No pain recorded."}
+          </div>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+            {painEntries.map(entry => (
+              <div key={entry.id}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                  <span style={{ fontFamily:"'DM Sans', sans-serif", fontSize:12, color:C.text }}>
+                    {muscleT(entry.muscleGroup?.name || "", lang)}
+                  </span>
+                  <span style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color:painColor(entry.painIntensity) }}>
+                    {entry.painIntensity}%
+                  </span>
+                </div>
+                <div style={{ height:3, background:"rgba(255,255,255,0.06)", borderRadius:2 }}>
+                  <div style={{
+                    width:`${entry.painIntensity}%`, height:"100%",
+                    background:painColor(entry.painIntensity), borderRadius:2,
+                    transition:"width 0.5s ease",
+                  }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
 
 export default function Historico({ userId, highlightId }) {
   const { t, lang } = useLang();
@@ -137,6 +226,7 @@ export default function Historico({ userId, highlightId }) {
             <span style={{ fontFamily:"'Space Mono', monospace", fontSize:9, color:C.muted, letterSpacing:"0.15em" }}>{t("equipment")} · </span>
             <span style={{ fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.yellow }}>{selected.equipmentType?.replace("_", " ") || "—"}</span>
           </div>
+          <PainSection workoutId={selected.id} lang={lang} />
         </>
       )}
 
@@ -144,10 +234,10 @@ export default function Historico({ userId, highlightId }) {
         <>
           <div style={{ display:"flex", gap:10, marginBottom:16, flexWrap:"wrap" }}>
             {[
-              { label: t("distance"), value: selected.km,                    unit:"km"     },
-              { label: t("duration"), value: formatDuration(selected.duration), unit:""     },
-              { label: t("pace"),     value: selected.pace?.toFixed(2),       unit:"min/km" },
-              { label: t("effort"),   value: selected.effort,                 unit:"/10"    },
+              { label: t("distance"), value: selected.km,                      unit:"km"     },
+              { label: t("duration"), value: formatDuration(selected.duration), unit:""       },
+              { label: t("pace"),     value: selected.pace?.toFixed(2),         unit:"min/km" },
+              { label: t("effort"),   value: selected.effort,                   unit:"/10"    },
             ].map(s => (
               <div key={s.label} style={{ flex:"1 1 40%", background:C.graphite, borderRadius:12, padding:"12px 14px" }}>
                 <div style={{ fontFamily:"'Space Mono', monospace", fontSize:8, color:C.muted, marginBottom:4 }}>{s.label}</div>
@@ -179,6 +269,7 @@ export default function Historico({ userId, highlightId }) {
               </div>
             </div>
           )}
+          <PainSection workoutId={selected.id} lang={lang} />
         </>
       )}
     </div>

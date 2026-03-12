@@ -4,6 +4,7 @@ import com.personal.fitanalyzer.domain.MuscleGroups;
 import com.personal.fitanalyzer.domain.Workout;
 import com.personal.fitanalyzer.domain.WorkoutPainEntry;
 import com.personal.fitanalyzer.dto.WorkoutPainRequestDTO;
+import com.personal.fitanalyzer.dto.WorkoutPainResponseDTO;
 import com.personal.fitanalyzer.exception.ResourceNotFoundException;
 import com.personal.fitanalyzer.repository.MuscleGroupRepository;
 import com.personal.fitanalyzer.repository.WorkoutPainEntryRepository;
@@ -43,7 +44,14 @@ public class WorkoutPainService {
         painEntryRepository.saveAll(entries);
     }
 
-    public List<WorkoutPainEntry> getPainByWorkout(Long workoutId) {
-        return painEntryRepository.findByWorkoutId(workoutId);
+    public List<WorkoutPainResponseDTO> getPainByWorkout(Long workoutId) {
+        return painEntryRepository.findByWorkoutId(workoutId).stream()
+                .map(e -> new WorkoutPainResponseDTO(
+                        e.getId(),
+                        e.getMuscleGroup().getId(),
+                        e.getMuscleGroup().getName(),
+                        e.getPainIntensity()
+                ))
+                .toList();
     }
 }
