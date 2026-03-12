@@ -1,72 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import api from "../api/api";
 import { C, ZONE_OPTIONS, WEATHER_OPTIONS, RUNTYPE_OPTIONS } from "../utils/constants";
 import { SectionLabel, NumericStepper, DurationStepper, EffortSlider } from "../utils/components";
 import { useLang } from "../utils/langContext";
-import { muscleT } from "../utils/translations";
-
-function PainfulMusclesModal({ workoutId, userId, onDone, t, lang }) {
-  const [muscleGroups, setMuscleGroups] = useState([]);
-  const [selected, setSelected] = useState([]);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    api.get("/muscle-groups")
-      .then(res => setMuscleGroups(res.data))
-      .catch(err => console.error(err));
-  }, []);
-
-  const toggle = (id) => {
-    setSelected(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await api.patch(`/run-workouts/${workoutId}/painful-muscles`, selected);
-    } catch (err) {
-      console.error("Erro ao salvar músculos doloridos:", err);
-    } finally {
-      setSaving(false);
-      onDone();
-    }
-  };
-
-  return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", zIndex:999, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
-      <div style={{ background:"#111", borderRadius:"24px 24px 0 0", padding:"28px 24px 40px", width:"100%", maxWidth:480, border:"1px solid rgba(255,255,255,0.08)", borderBottom:"none" }}>
-        <div style={{ fontFamily:"'Syne', sans-serif", fontWeight:800, fontSize:20, color:C.text, marginBottom:6 }}>{t("painful_muscles_title")}</div>
-        <div style={{ fontFamily:"'DM Sans', sans-serif", fontSize:13, color:C.muted, marginBottom:20, lineHeight:1.6 }}>
-          {t("painful_muscles_desc")}
-        </div>
-        <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:24 }}>
-          {muscleGroups.map(m => {
-            const active = selected.includes(m.id);
-            return (
-              <button key={m.id} onClick={() => toggle(m.id)} style={{
-                padding:"8px 14px", borderRadius:100, cursor:"pointer",
-                background: active ? "rgba(255,59,48,0.12)" : C.graphite,
-                border:`1px solid ${active ? C.red : "rgba(255,255,255,0.08)"}`,
-                fontFamily:"'DM Sans', sans-serif", fontSize:13,
-                color: active ? C.red : C.muted, transition:"all 0.15s",
-              }}>
-                {active ? "🔴 " : ""}{muscleT(m.name, lang)}
-              </button>
-            );
-          })}
-        </div>
-        <button onClick={handleSave} disabled={saving} style={{
-          width:"100%", background: saving ? "rgba(255,210,0,0.3)" : C.yellow,
-          border:"none", borderRadius:14, padding:"14px",
-          fontFamily:"'Space Mono', monospace", fontSize:11, fontWeight:700,
-          letterSpacing:"0.2em", color:"#050505", cursor: saving ? "not-allowed" : "pointer",
-        }}>
-          {saving ? t("saving") : selected.length > 0 ? t("save_and_continue") : t("none_continue")}
-        </button>
-      </div>
-    </div>
-  );
-}
+import PainModal from "./PainModal";
 
 export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
   const { t, lang } = useLang();
@@ -111,7 +48,7 @@ export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
     }
   };
 
-  const handleModalDone = () => {
+  const handlePainDone = () => {
     setShowPainModal(false);
     onSave(savedWorkoutId);
   };
@@ -119,12 +56,10 @@ export default function RegisterRun({ suggestion, userId, onBack, onSave }) {
   return (
     <div className="volt-screen">
       {showPainModal && (
-        <PainfulMusclesModal
+        <PainModal
           workoutId={savedWorkoutId}
-          userId={userId}
-          onDone={handleModalDone}
-          t={t}
-          lang={lang}
+          onDone={handlePainDone}
+          onSkip={handlePainDone}
         />
       )}
 

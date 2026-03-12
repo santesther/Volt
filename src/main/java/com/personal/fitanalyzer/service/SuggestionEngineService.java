@@ -9,6 +9,7 @@ import com.personal.fitanalyzer.domain.TrainingDayEntry;
 import com.personal.fitanalyzer.domain.TrainingPlan;
 import com.personal.fitanalyzer.domain.User;
 import com.personal.fitanalyzer.domain.Workout;
+import com.personal.fitanalyzer.domain.WorkoutPainEntry;
 import com.personal.fitanalyzer.domain.enums.Goal;
 import com.personal.fitanalyzer.domain.enums.RunType;
 import com.personal.fitanalyzer.domain.enums.WorkoutType;
@@ -21,6 +22,7 @@ import com.personal.fitanalyzer.repository.RunWorkoutRepository;
 import com.personal.fitanalyzer.repository.StrengthWorkoutRepository;
 import com.personal.fitanalyzer.repository.TrainingPlanRepository;
 import com.personal.fitanalyzer.repository.UserRepository;
+import com.personal.fitanalyzer.repository.WorkoutPainEntryRepository;
 import com.personal.fitanalyzer.repository.WorkoutRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -46,6 +48,7 @@ public class SuggestionEngineService {
     private final MuscleGroupRepository muscleGroupRepository;
     private final TrainingPlanRepository trainingPlanRepository;
     private final RunWorkoutRepository runWorkoutRepository;
+    private final WorkoutPainEntryRepository painEntryRepository;
     private final SecurityUtils securityUtils;
 
     public SuggestionResponseDTO getSuggestion(Long userId, SuggestionRequestDTO request) {
@@ -54,22 +57,19 @@ public class SuggestionEngineService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
         List<Workout> recentWorkouts = workoutRepository.findByUserId(userId);
-        List<Long> painfulMuscleIds = runWorkoutRepository
-                .findByUserId(userId).stream()
-                .filter(w -> ChronoUnit.HOURS.between(w.getDate(), LocalDateTime.now()) <= 48)
-                .flatMap(w -> w.getPainfulMuscles().stream())
-                .map(MuscleGroups::getId)
+
+        List<Long> painfulMuscleIds = painEntryRepository.findByUserId(userId).stream()
+                .filter(p -> ChronoUnit.HOURS.between(p.getWorkout().getDate(), LocalDateTime.now()) <= 48)
+                .filter(p -> p.getPainIntensity() != null && p.getPainIntensity() > 0)
+                .map(p -> p.getMuscleGroup().getId())
                 .distinct()
                 .collect(Collectors.toList());
+
         String intensity = calculateIntensity(recentWorkouts, user.getGoal());
         Map<String, Float> fatigue = calculateMuscleFatigue(userId);
 
         Optional<TrainingPlan> planOpt = trainingPlanRepository.findByUserId(userId);
         if (planOpt.isPresent()) {
-            DayOfWeek today = LocalDateTime.now().getDayOfWeek();
-            planOpt.get().getTrainingDays().stream()
-                    .map(d -> d.getDayOfWeek().toString())
-                    .collect(Collectors.joining(", "));
             return suggestFromPlan(planOpt.get(), user, painfulMuscleIds, intensity, fatigue, recentWorkouts);
         }
         return null;
@@ -107,7 +107,6 @@ public class SuggestionEngineService {
                     strengthEntry.get().getMuscleGroups(),
                     painfulMuscleIds, intensity, fatigue, user.getId()
             );
-
             if (suggestion == null) {
                 return restSuggestion(fatigue, plan, today);
             }
@@ -115,18 +114,6 @@ public class SuggestionEngineService {
         }
 
         return buildRunSuggestion(intensity, fatigue);
-    }
-
-    private TrainingDay nextPlannedDay(TrainingPlan plan, DayOfWeek today) {
-        return plan.getTrainingDays().stream()
-                .filter(d -> d.getDayOfWeek() != today)
-                .filter(d -> d.getTrainingDayEntries().stream()
-                        .anyMatch(e -> e.getWorkoutType() != WorkoutType.REST))
-                .min(Comparator.comparingInt(d -> {
-                    int diff = d.getDayOfWeek().getValue() - today.getValue();
-                    return diff <= 0 ? diff + 7 : diff;
-                }))
-                .orElse(null);
     }
 
     private SuggestionResponseDTO restSuggestion(Map<String, Float> fatigue, TrainingPlan plan, DayOfWeek today) {
@@ -193,17 +180,15 @@ public class SuggestionEngineService {
 
         List<MuscleGroups> readyMuscles = plannedMuscles.stream()
                 .filter(m -> !painfulMuscleIds.contains(m.getId()))
-                .filter(m -> {
-                    return strengthWorkouts.stream()
-                            .filter(w -> w.getMuscles().contains(m))
-                            .map(Workout::getDate)
-                            .max(Comparator.naturalOrder())
-                            .map(lastTrained -> {
-                                long hoursAgo = ChronoUnit.HOURS.between(lastTrained, now);
-                                return hoursAgo >= m.getRecoveryHours();
-                            })
-                            .orElse(true);
-                })
+                .filter(m -> strengthWorkouts.stream()
+                        .filter(w -> w.getMuscles().contains(m))
+                        .map(Workout::getDate)
+                        .max(Comparator.naturalOrder())
+                        .map(lastTrained -> {
+                            long hoursAgo = ChronoUnit.HOURS.between(lastTrained, now);
+                            return hoursAgo >= m.getRecoveryHours();
+                        })
+                        .orElse(true))
                 .collect(Collectors.toList());
 
         Integer suggestedSets = intensity.equals("HIGH") ? 5 : intensity.equals("MEDIUM") ? 4 : 3;
@@ -222,9 +207,7 @@ public class SuggestionEngineService {
             message = "Atenção: " + fatiguedNames + " ainda estão em recuperação. Treine com cautela!";
         }
 
-        if (readyMuscles.isEmpty()) {
-            return null;
-        }
+        if (readyMuscles.isEmpty()) return null;
 
         return new SuggestionResponseDTO(
                 WorkoutType.STRENGTH, message, readyMuscles,
@@ -284,8 +267,7 @@ public class SuggestionEngineService {
         float strengthRatio = (float) strengthCount / totalCount;
         float idealStrengthRatio = getIdealStrengthRatio(goal);
 
-        if (strengthRatio < idealStrengthRatio) return WorkoutType.STRENGTH;
-        return WorkoutType.RUN;
+        return strengthRatio < idealStrengthRatio ? WorkoutType.STRENGTH : WorkoutType.RUN;
     }
 
     private float getIdealStrengthRatio(Goal goal) {
@@ -321,7 +303,7 @@ public class SuggestionEngineService {
     private Map<String, Float> calculateMuscleFatigue(Long userId) {
         List<MuscleGroups> allMuscles = muscleGroupRepository.findAll();
         List<StrengthWorkout> strengthWorkouts = strengthWorkoutRepository.findByUserId(userId);
-        List<RunWorkout> runWorkouts = runWorkoutRepository.findByUserId(userId);
+        List<WorkoutPainEntry> painEntries = painEntryRepository.findByUserId(userId);
         LocalDateTime now = LocalDateTime.now();
         Map<String, Float> fatigue = new HashMap<>();
 
@@ -337,23 +319,24 @@ public class SuggestionEngineService {
                     .map(OptionalDouble::of)
                     .orElse(OptionalDouble.empty());
 
-            OptionalDouble runFatigue = runWorkouts.stream()
-                    .filter(w -> w.getPainfulMuscles().contains(muscle))
-                    .map(Workout::getDate)
-                    .max(Comparator.naturalOrder())
-                    .map(lastTrained -> {
-                        long hoursAgo = ChronoUnit.HOURS.between(lastTrained, now);
-                        return (double) Math.max(0, 100 - (hoursAgo * 100f / 48f));
+            OptionalDouble painFatigue = painEntries.stream()
+                    .filter(p -> p.getMuscleGroup().getId().equals(muscle.getId()))
+                    .filter(p -> p.getPainIntensity() != null && p.getPainIntensity() > 0)
+                    .max(Comparator.comparing(p -> p.getWorkout().getDate()))
+                    .map(p -> {
+                        long hoursAgo = ChronoUnit.HOURS.between(p.getWorkout().getDate(), now);
+                        double decayFactor = Math.max(0, 1.0 - (hoursAgo / 72.0));
+                        return p.getPainIntensity() * decayFactor;
                     })
                     .map(OptionalDouble::of)
                     .orElse(OptionalDouble.empty());
 
             double finalFatigue = Math.max(
                     strengthFatigue.orElse(0),
-                    runFatigue.orElse(0)
+                    painFatigue.orElse(0)
             );
 
-            fatigue.put(muscle.getName(), (float) finalFatigue);
+            fatigue.put(muscle.getName(), (float) Math.min(100, finalFatigue));
         });
 
         return fatigue;

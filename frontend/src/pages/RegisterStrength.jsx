@@ -4,6 +4,7 @@ import { C, EQUIPMENT_OPTIONS, EQUIPMENT_LABELS } from "../utils/constants";
 import { SectionLabel, NumericStepper, EffortSlider } from "../utils/components";
 import { useLang } from "../utils/langContext";
 import { muscleT } from "../utils/translations";
+import PainModal from "./PainModal";
 
 function SetRow({ setNum, data, onChange, onRemove }) {
   return (
@@ -28,7 +29,7 @@ function SetRow({ setNum, data, onChange, onRemove }) {
   );
 }
 
-function ExerciseCard({ exercise, sets, onAddSet, onUpdateSet, onRemoveSet, onRemoveExercise, t }) {
+function ExerciseCard({ exercise, sets, onAddSet, onUpdateSet, onRemoveSet, onRemoveExercise, t, exName }) {
   return (
     <div style={{ background:C.g2, borderRadius:14, padding:"14px 16px", marginBottom:10, border:"1px solid rgba(255,210,0,0.07)" }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
@@ -73,6 +74,9 @@ export default function RegisterStrength({ suggestion, userId, onBack, onSave })
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState(null);
   const [allMuscles, setAllMuscles] = useState([]);
+  const [showPainModal, setShowPainModal] = useState(false);
+  const [savedWorkoutId, setSavedWorkoutId] = useState(null);
+
   const exName = (ex) => lang === "en" && ex.nameEn ? ex.nameEn : ex.name;
 
   const isFreestyle = !suggestion?.suggestedMuscles?.length;
@@ -128,7 +132,8 @@ export default function RegisterStrength({ suggestion, userId, onBack, onSave })
       setSaving(true);
       const res = await api.post("/strength-workouts", { userId, effort, date: date + ":00", durationMinutes, equipment, sets });
       setSaved(true);
-      setTimeout(() => { setSaved(false); onSave(res.data.id); }, 1800);
+      setSavedWorkoutId(res.data.id);
+      setTimeout(() => setShowPainModal(true), 800);
     } catch (err) {
       setError(lang === "pt-BR" ? "Erro ao salvar treino. Tente novamente." : "Error saving workout. Please try again.");
       console.error(err);
@@ -137,8 +142,21 @@ export default function RegisterStrength({ suggestion, userId, onBack, onSave })
     }
   };
 
+  const handlePainDone = () => {
+    setShowPainModal(false);
+    onSave(savedWorkoutId);
+  };
+
   return (
     <div className="volt-screen">
+      {showPainModal && (
+        <PainModal
+          workoutId={savedWorkoutId}
+          onDone={handlePainDone}
+          onSkip={handlePainDone}
+        />
+      )}
+
       <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:24 }}>
         <button onClick={onBack} style={{ background:C.graphite, border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, width:40, height:40, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, color:C.text, flexShrink:0 }}>←</button>
         <div>
@@ -186,7 +204,7 @@ export default function RegisterStrength({ suggestion, userId, onBack, onSave })
             </div>
           )}
           {selectedExercises.filter(e => e.exercise.muscleGroup?.id === muscle.id).map(({ exercise, sets }) => (
-            <ExerciseCard key={exercise.id} exercise={exercise} sets={sets} t={t}
+            <ExerciseCard key={exercise.id} exercise={exercise} sets={sets} t={t} exName={exName}
               onAddSet={() => addSet(exercise.id)}
               onUpdateSet={(i, u) => updateSet(exercise.id, i, u)}
               onRemoveSet={(i) => removeSet(exercise.id, i)}
